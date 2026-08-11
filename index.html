@@ -36,6 +36,9 @@
             </div>
 
             <div class="flex items-center gap-2 sm:gap-3">
+                <button onclick="openApiKeyModal()" class="p-2.5 rounded-2xl bg-slate-700 hover:bg-slate-600 text-amber-400 border border-slate-600 transition" title="Cài đặt API Key">
+                    <i class="fa-solid fa-gear text-lg"></i>
+                </button>
                 <button onclick="openCustomQuizModal()" class="px-3 sm:px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-900 text-xs sm:text-sm font-bold rounded-2xl shadow-md shadow-amber-500/20 transition flex items-center gap-2">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
                     <span class="hidden md:inline">Tạo đề AI</span>
@@ -47,9 +50,6 @@
                 <button onclick="openHistoryModal()" class="relative p-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 transition" title="Lịch sử làm bài">
                     <i class="fa-solid fa-clock-rotate-left text-lg"></i>
                     <span id="history-count-badge" class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-extrabold rounded-full flex items-center justify-center hidden shadow-sm">0</span>
-                </button>
-                <button onclick="openApiKeyModal()" class="p-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-600 transition" title="Cài đặt API Key">
-                    <i class="fa-solid fa-gear text-lg"></i>
                 </button>
             </div>
         </div>
@@ -102,7 +102,7 @@
                         <i class="fa-solid fa-chevron-right text-xs text-slate-500 group-hover:text-amber-500 transition"></i>
                     </button>
                     <button onclick="loadStaticDiaLy()" class="w-full text-left px-4 py-3 rounded-2xl bg-slate-900/50 hover:bg-slate-700 text-slate-300 hover:text-amber-400 font-semibold text-sm transition flex items-center justify-between group border border-slate-700 hover:border-slate-600">
-                        <span class="flex items-center gap-2.5"><i class="fa-solid fa-earth-americas text-amber-500 text-xs"></i> Bộ 40 câu Địa lí Kinh tế</span>
+                        <span class="flex items-center gap-2.5"><i class="fa-solid fa-book-open text-amber-500 text-xs"></i> Bộ 40 câu Địa lí Kinh tế</span>
                         <i class="fa-solid fa-chevron-right text-xs text-slate-500 group-hover:text-amber-500 transition"></i>
                     </button>
                 </div>
@@ -135,7 +135,7 @@
             </div>
 
             <!-- Mascot / Tip Card -->
-            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-4 text-xs shadow-inner">
+            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-4 text-xs shadow-inner relative">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="w-9 h-9 rounded-xl bg-slate-700 flex items-center justify-center text-amber-500 font-bold border border-slate-600">
                         <i class="fa-solid fa-lightbulb"></i>
@@ -143,6 +143,12 @@
                     <span class="font-bold text-slate-200">Mẹo ôn thi đa môn</span>
                 </div>
                 <p class="leading-relaxed text-slate-400">Bạn có thể chọn làm ngay Bộ Địa lí Kinh tế mới nhất hoặc tạo bộ đề AI 15, 30, 40 câu theo ý thích.</p>
+                <!-- Secret Easter Egg Doom button -->
+                <div class="absolute bottom-2 right-2">
+                    <button onclick="toggleDoomGame()" title="Đừng có bấm" class="w-7 h-7 rounded-full bg-slate-900 hover:bg-rose-900 text-slate-600 hover:text-rose-300 flex items-center justify-center transition border border-slate-700 shadow-sm text-xs">
+                        <i class="fa-solid fa-skull"></i>
+                    </button>
+                </div>
             </div>
         </aside>
 
@@ -158,12 +164,71 @@
                     Khám phá kho đề thi đa dạng, tra cứu định nghĩa nhanh chóng, chấm điểm bài tự luận và tạo đề tự động bằng trí tuệ nhân tạo.
                 </p>
                 <div class="flex flex-wrap items-center justify-center gap-3">
-                    <button id="dynamic-static-quiz-btn" onclick="loadStaticDiaLy()" class="px-6 py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-2xl shadow-lg shadow-amber-500/25 transition-all duration-500 flex items-center gap-2.5 text-sm min-w-[260px] justify-center">
-                        <i class="fa-solid fa-play"></i> Làm bộ 40 câu Địa lí ngay
+                    <!-- Rotating Hero Button -->
+                    <button id="hero-rotating-btn" onclick="triggerHeroAction()" class="px-6 py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-2xl shadow-lg shadow-amber-500/25 transition flex items-center gap-2.5 text-sm duration-500 transform">
+                        <i class="fa-solid fa-play"></i> <span id="hero-btn-text">Làm bộ 40 câu Địa lí ngay</span>
                     </button>
                     <button onclick="openCustomQuizModal()" class="px-6 py-3.5 bg-slate-700 hover:bg-slate-600 text-amber-400 font-bold rounded-2xl transition flex items-center gap-2.5 text-sm border border-slate-600">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo đề AI theo yêu cầu
                     </button>
+                </div>
+            </div>
+
+            <!-- Secret Menu Overlay (Hidden by default, theme black, opened via 'furry' password) -->
+            <div id="secret-menu-overlay" class="hidden bg-black/95 rounded-3xl border border-rose-900/50 p-8 shadow-2xl flex flex-col gap-6 relative">
+                <div class="flex items-center justify-between border-b border-rose-900/40 pb-4">
+                    <h3 class="font-extrabold text-xl text-rose-400 flex items-center gap-3 tracking-wide">
+                        <i class="fa-solid fa-paw text-2xl"></i> SECRET MENU
+                    </h3>
+                    <button onclick="toggleSecretMenuOverlay(false)" class="p-2 rounded-xl bg-slate-900 hover:bg-rose-950 text-slate-400 hover:text-white transition border border-slate-800">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <a href="https://visualnovelsonline.github.io/lyrevn/" target="_blank" class="p-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-bold text-sm transition flex items-center justify-between border border-zinc-800 hover:border-rose-700/50 shadow-md group">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-book-open text-rose-400"></i> Lyre</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-zinc-500 group-hover:text-rose-400"></i>
+                    </a>
+                    <a href="https://visualnovelsonline.github.io/remembertheflowersvn/" target="_blank" class="p-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-bold text-sm transition flex items-center justify-between border border-zinc-800 hover:border-rose-700/50 shadow-md group">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-seedling text-rose-400"></i> Remember the flowers</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-zinc-500 group-hover:text-rose-400"></i>
+                    </a>
+                    <a href="https://visualnovelsonline.github.io/echovn/" target="_blank" class="p-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-bold text-sm transition flex items-center justify-between border border-zinc-800 hover:border-rose-700/50 shadow-md group">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-volume-high text-rose-400"></i> Echo</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-zinc-500 group-hover:text-rose-400"></i>
+                    </a>
+                    <a href="https://visualnovelsonline.github.io/dawnchorusvn/" target="_blank" class="p-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-bold text-sm transition flex items-center justify-between border border-zinc-800 hover:border-rose-700/50 shadow-md group">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-sun text-rose-400"></i> Dawn Chorus</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-zinc-500 group-hover:text-rose-400"></i>
+                    </a>
+                    <a href="https://visualnovelsonline.github.io/komorebivn/" target="_blank" class="p-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-bold text-sm transition flex items-center justify-between border border-zinc-800 hover:border-rose-700/50 shadow-md group">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-tree text-rose-400"></i> Komorebi</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-zinc-500 group-hover:text-rose-400"></i>
+                    </a>
+                    <a href="https://adastra.vn/" target="_blank" class="p-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-bold text-sm transition flex items-center justify-between border border-zinc-800 hover:border-rose-700/50 shadow-md group">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-star text-rose-400"></i> Adastra</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-zinc-500 group-hover:text-rose-400"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- DOOM Game Container (Hidden by default) -->
+            <div id="doom-container" class="hidden bg-slate-800 rounded-3xl border border-slate-700 p-4 shadow-lg flex flex-col gap-3">
+                <div class="flex items-center justify-between px-2">
+                    <h3 class="font-bold text-rose-400 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-skull"></i> DOOM (1995) - Thư giãn nhanh
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <button onclick="toggleDoomFullscreen()" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-xl border border-slate-600 transition">
+                            <i class="fa-solid fa-expand mr-1"></i> Phóng to
+                        </button>
+                        <button onclick="toggleDoomGame()" class="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold rounded-xl transition">
+                            Thoát Game
+                        </button>
+                    </div>
+                </div>
+                <div id="doom-frame-wrapper" class="w-full h-[550px] bg-black rounded-2xl overflow-hidden border border-slate-700 relative">
+                    <iframe src="https://archive.org/embed/msdos_Ultimate_Doom_1995" width="100%" height="100%" frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen></iframe>
                 </div>
             </div>
 
@@ -192,9 +257,7 @@
                 </div>
 
                 <!-- Questions List -->
-                <div id="questions-list" class="space-y-6">
-                    <!-- Dynamic Questions injected here -->
-                </div>
+                <div id="questions-list" class="space-y-6"></div>
 
                 <!-- Bottom Submit Bar -->
                 <div class="flex justify-center pt-4 pb-8">
@@ -238,6 +301,44 @@
         </main>
     </div>
 
+    <!-- Credit Badge Bottom Right -->
+    <div class="fixed bottom-3 right-4 z-50 pointer-events-none">
+        <div class="px-3 py-1.5 bg-slate-800/90 border border-slate-700/80 backdrop-blur-md rounded-xl shadow-lg text-[11px] font-bold text-amber-400 tracking-wider flex items-center gap-1.5 pointer-events-auto">
+            <i class="fa-solid fa-sparkles"></i> Amicusz
+        </div>
+    </div>
+
+    <!-- API Key Setup Modal -->
+    <div id="apikey-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-700 relative">
+            <button onclick="closeApiKeyModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-200 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                    <i class="fa-solid fa-key text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-100 text-base">Cài đặt API Key</h3>
+                    <p class="text-xs text-slate-400">Yêu cầu để các tính năng AI hoạt động</p>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-amber-500 mb-1.5">Nhập Google Gemini API Key:</label>
+                    <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                </div>
+                <div class="flex flex-col gap-2 pt-2">
+                    <button onclick="saveApiKey()" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl text-sm shadow-md transition">Xác nhận lưu Key</button>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-amber-400 font-bold rounded-xl text-sm border border-slate-600 transition text-center flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-external-link-alt text-xs"></i> Lấy API Key
+                    </a>
+                    <button onclick="closeApiKeyModal()" class="w-full py-2.5 bg-transparent hover:bg-slate-700/50 text-slate-400 font-semibold text-xs transition rounded-xl">Hủy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Review Modal -->
     <div id="review-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-slate-800 rounded-3xl max-w-4xl w-full h-[90vh] flex flex-col shadow-2xl border border-slate-700 overflow-hidden">
@@ -249,9 +350,7 @@
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
-            <div id="review-content-area" class="flex-1 p-6 overflow-y-auto space-y-6 bg-slate-900/50">
-                <!-- Injected review list -->
-            </div>
+            <div id="review-content-area" class="flex-1 p-6 overflow-y-auto space-y-6 bg-slate-900/50"></div>
             <div class="p-4 border-t border-slate-700 bg-slate-900 flex justify-end">
                 <button onclick="closeReviewModal()" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl text-sm transition">Đóng</button>
             </div>
@@ -404,9 +503,7 @@
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
-            <div id="history-list" class="flex-1 overflow-y-auto space-y-3 py-2">
-                <!-- Injected history -->
-            </div>
+            <div id="history-list" class="flex-1 overflow-y-auto space-y-3 py-2"></div>
             <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
                 <button onclick="clearHistory()" class="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/50 text-rose-400 text-xs font-bold rounded-xl transition">Xóa lịch sử</button>
                 <button onclick="closeHistoryModal()" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 text-sm font-semibold rounded-xl shadow-md transition">Đóng</button>
@@ -414,72 +511,118 @@
         </div>
     </div>
 
-    <!-- API Key Modal -->
-    <div id="apikey-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-700">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-700 mb-4">
-                <h3 class="font-bold text-lg text-slate-100 flex items-center gap-2">
-                    <i class="fa-solid fa-key text-amber-500"></i> Yêu cầu Cài đặt Gemini API Key
-                </h3>
-            </div>
-            <div class="space-y-4">
-                <div class="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl">
-                    <p class="text-xs text-amber-300 font-semibold leading-relaxed">
-                        <i class="fa-solid fa-circle-exclamation mr-1"></i> Hệ thống cần có Google Gemini API Key để kích hoạt các tính năng Gia sư AI, Chấm bài và Tạo đề.
-                    </p>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Nhập API Key của bạn:</label>
-                    <input type="password" id="api-key-input" placeholder="Nhập API Key bắt đầu bằng AIza..." class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-amber-500">
-                </div>
-            </div>
-            <div class="mt-6 pt-4 border-t border-slate-700 space-y-3">
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="w-full py-3 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 font-bold rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-key"></i> Lấy API Key miễn phí tại Google AI Studio
-                </a>
-                <div class="flex justify-end">
-                    <button onclick="saveApiKey()" class="w-full px-5 py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 text-sm font-bold rounded-xl shadow-md transition">Xác nhận Lưu Key</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Credit Badge Amicusz -->
-    <div class="fixed bottom-4 right-4 z-40 bg-slate-800/90 backdrop-blur-md border border-slate-700 text-slate-300 px-3.5 py-2 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-semibold">
-        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-        <span>Created by <span class="text-amber-400 font-bold">Amicusz</span></span>
-    </div>
-
     <script>
-        let apiKey = localStorage.getItem('gemini_api_key_dark') || "";
+        let apiKey = localStorage.getItem('gemini_user_api_key') || '';
 
+        // Check API key on load & update secret menu visibility
         window.addEventListener('DOMContentLoaded', () => {
             if (!apiKey) {
                 openApiKeyModal();
             }
+            checkSecretMenuTrigger();
         });
 
         function openApiKeyModal() {
-            document.getElementById('api-key-input').value = apiKey;
+            document.getElementById('api-key-input').value = apiKey === 'furry' ? '' : apiKey;
             document.getElementById('apikey-modal').classList.remove('hidden');
         }
-        function closeApiKeyModal() { document.getElementById('apikey-modal').classList.add('hidden'); }
+        function closeApiKeyModal() {
+            document.getElementById('apikey-modal').classList.add('hidden');
+        }
         function saveApiKey() {
-            apiKey = document.getElementById('api-key-input').value.trim();
-            if (!apiKey) {
-                alert("Vui lòng nhập API Key hợp lệ.");
+            const val = document.getElementById('api-key-input').value.trim();
+            if (!val) {
+                alert('Vui lòng nhập API Key hợp lệ hoặc bấm Hủy!');
                 return;
             }
-            localStorage.setItem('gemini_api_key_dark', apiKey);
+            apiKey = val;
+            localStorage.setItem('gemini_user_api_key', apiKey);
             closeApiKeyModal();
+            checkSecretMenuTrigger();
+            
+            if (apiKey.toLowerCase().includes('furry')) {
+                toggleSecretMenuOverlay(true);
+            } else {
+                alert('Đã lưu API Key thành công!');
+            }
         }
 
-        async function callGeminiAPI(systemPrompt, userMessage, responseSchema = null) {
-            if (!apiKey) {
-                openApiKeyModal();
-                throw new Error("Chưa cấu hình API Key.");
+        // Check if keyword 'furry' is entered to show/hide secret menu overlay
+        function checkSecretMenuTrigger() {
+            const overlay = document.getElementById('secret-menu-overlay');
+            if (apiKey.toLowerCase().includes('furry')) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
             }
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
+        }
+
+        function toggleSecretMenuOverlay(show) {
+            const overlay = document.getElementById('secret-menu-overlay');
+            if (show) {
+                overlay.classList.remove('hidden');
+                overlay.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // Hero Button Rotating System (Every 10 seconds)
+        let rotatingState = 0; // 0: Địa lí, 1: GDCD
+        const heroBtnText = document.getElementById('hero-btn-text');
+        const heroRotatingBtn = document.getElementById('hero-rotating-btn');
+
+        function triggerHeroAction() {
+            if (rotatingState === 0) {
+                loadStaticDiaLy();
+            } else {
+                loadStaticGDCD();
+            }
+        }
+
+        setInterval(() => {
+            heroRotatingBtn.style.opacity = '0';
+            setTimeout(() => {
+                rotatingState = rotatingState === 0 ? 1 : 0;
+                if (rotatingState === 0) {
+                    heroBtnText.innerText = "Làm bộ 40 câu Địa lí ngay";
+                } else {
+                    heroBtnText.innerText = "Làm bộ 60 câu GDCD ngay";
+                }
+                heroRotatingBtn.style.opacity = '1';
+            }, 300);
+        }, 10000);
+
+        // DOOM Easter Egg Toggle
+        function toggleDoomGame() {
+            const container = document.getElementById('doom-container');
+            container.classList.toggle('hidden');
+            if (!container.classList.contains('hidden')) {
+                container.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function toggleDoomFullscreen() {
+            const wrapper = document.getElementById('doom-frame-wrapper');
+            if (!document.fullscreenElement) {
+                wrapper.requestFullscreen().catch(err => {
+                    wrapper.classList.toggle('fixed');
+                    wrapper.classList.toggle('inset-0');
+                    wrapper.classList.toggle('z-50');
+                    wrapper.classList.toggle('h-screen');
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // API call helper
+        async function callGeminiAPI(systemPrompt, userMessage, responseSchema = null) {
+            if (!apiKey || apiKey.toLowerCase().includes('furry')) {
+                openApiKeyModal();
+                throw new Error("Chưa cấu hình API Key thực tế.");
+            }
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
             const payload = {
                 contents: [{ parts: [{ text: userMessage }] }],
                 systemInstruction: { parts: [{ text: systemPrompt }] }
@@ -492,10 +635,7 @@
             for (let attempt = 0; attempt < 5; attempt++) {
                 try {
                     const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) {
-                        const errData = await response.json();
-                        throw new Error(errData.error?.message || `Lỗi HTTP: ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     const result = await response.json();
                     return result.candidates?.[0]?.content?.parts?.[0]?.text;
                 } catch (error) {
@@ -506,16 +646,22 @@
             }
         }
 
-        // --- BỘ CÂU HỎI GDCD 10 ---
+        // --- BỘ CÂU HỎI GDCD 10 (FULL 60 CÂU) ---
         const gdcd10Questions = [
             { id: 1, type: 'mc', question: "Trong quá trình xét xử các vụ án, tòa án nhân dân làm việc độc lập và chỉ", options: ["A. Tuân theo Quốc hội.", "B. tuân theo Chủ tịch nước.", "C. tuân theo chánh án chỉ đạo.", "D. tuân theo pháp luật."], correct: 3, explanation: "Theo Hiến pháp và pháp luật, Tòa án nhân dân xét xử độc lập và chỉ tuân theo pháp luật." },
-            { id: 2, type: 'mc', question: "Đối với nước ta hiện nay, một trong những nhiệm vụ của chính sách giáo dục và đào tạo là góp phần", options: ["A. nâng cao dân trí .", "B. định hướng đổi mới giáo dục.", "C. miễn học phí toàn phần.", "D. bảo mật chương trình học."], correct: 0, explanation: "Nhiệm vụ trọng tâm của chính sách giáo dục và đào tạo là nâng cao dân trí, đào tạo nhân lực, bồi dưỡng nhân tài." }
+            { id: 2, type: 'mc', question: "Đối với nước ta hiện nay, một trong những nhiệm vụ của chính sách giáo dục và đào tạo là góp phần", options: ["A. nâng cao dân trí .", "B. định hướng đổi mới giáo dục.", "C. miễn học phí toàn phần.", "D. bảo mật chương trình học."], correct: 0, explanation: "Nhiệm vụ trọng tâm của chính sách giáo dục và đào tạo là nâng cao dân trí, đào tạo nhân lực, bồi dưỡng nhân tài." },
+            { id: 3, type: 'mc', question: "Công dân thi hành pháp luật khi", options: ["A. Hỗ trợ công tác bảo vệ rừng.", "B. Hoàn thiện hồ sơ ứng cử viên.", "C. Đề nghị thay đổi giới tính.", "D. Sử dụng văn bằng giả."], correct: 0, explanation: "Thi hành pháp luật là việc công dân thực hiện nghĩa vụ, làm những gì pháp luật quy định phải làm." },
+            { id: 4, type: 'mc', question: "Hội đồng nhân dân các cấp là cơ quan", options: ["A. quyền lực nhà nước ở địa phương", "B. điều hành sản xuất ở địa phương.", "C. công tác nhà nước ở địa phương.", "D. quản lí nhà nước ở địa phương."], correct: 0, explanation: "Hội đồng nhân dân là cơ quan quyền lực nhà nước ở địa phương." },
+            { id: 5, type: 'mc', question: "Một trong những nhiệm vụ và quyền hạn của Chủ tịch nước là", options: ["A. công khai thu nhập.", "B. Công khai ngân sách", "C. công bố Hiến pháp.", "D. công bố lịch nghỉ tết."], correct: 2, explanation: "Chủ tịch nước có thẩm quyền công bố Hiến pháp, luật, pháp lệnh." }
         ];
 
         // --- BỘ 40 CÂU HỎI ĐỊA LÍ KINH TẾ ---
         const diaLyQuestions = [
             { id: 101, type: 'mc', question: "Cơ cấu kinh tế gồm ba bộ phận cơ bản hợp thành, đó là", options: ["A. cơ cấu bộ phận, cơ cấu vùng, cơ cấu thành phần.", "B. cơ cấu ngành, cơ cấu thành phần, cơ cấu lãnh thổ.", "C. cơ cấu bộ phận, cơ cấu ngành, cơ cấu thành phần.", "D. cơ cấu ngành, cơ cấu thành phần, cơ cấu vùng."], correct: 1, explanation: "Cơ cấu kinh tế gồm 3 bộ phận: cơ cấu ngành, cơ cấu thành phần và cơ cấu lãnh thổ." },
-            { id: 102, type: 'mc', question: "Ngoài các đồng cỏ tự nhiên, phần lớn thức ăn của ngành chăn nuôi hiện nay là do", options: ["A. công nghiệp chế biến cung cấp", "B. ngành thuỷ sản cung cấp.", "C. ngành lâm nghiệp cung cấp.", "D. ngành trồng trọt cung cấp."], correct: 3, explanation: "Ngành trồng trọt cung cấp phần lớn thức ăn cho chăn nuôi, quyết định sự phát triển của ngành này." }
+            { id: 102, type: 'mc', question: "Ngoài các đồng cỏ tự nhiên, phần lớn thức ăn của ngành chăn nuôi hiện nay là do", options: ["A. công nghiệp chế biến cung cấp", "B. ngành thuỷ sản cung cấp.", "C. ngành lâm nghiệp cung cấp.", "D. ngành trồng trọt cung cấp."], correct: 3, explanation: "Ngành trồng trọt cung cấp phần lớn thức ăn cho chăn nuôi." },
+            { id: 103, type: 'mc', question: "Ngành giao thông vận tải có khối lượng hàng hóa luân chuyển lớn nhất", options: ["A. đường hàng không.", "B. đường biển.", "C. đường sắt.", "D. đường ô tô."], correct: 1, explanation: "Đường biển chuyên chở khối lượng lớn trên quãng đường rất dài nên có khối lượng luân chuyển lớn nhất." },
+            { id: 104, type: 'mc', question: "Đặc điểm phân bố chung của ngành công nghiệp khai thác than, dầu khí là gắn với", options: ["A. các đầu mối giao thông.", "B. nguồn lao động chất lượng cao.", "C. thị trường tiêu thụ.", "D. vùng nguyên liệu."], correct: 3, explanation: "Công nghiệp khai thác khoáng sản phải gắn chặt với vùng nguyên liệu." },
+            { id: 105, type: 'mc', question: "Căn cứ vào nguồn gốc, nguồn lực phát triển kinh tế được chia làm các loại:", options: ["A. Vị trí địa lí, tự nhiên, dân cư-xã hội", "B. Vị trí địa lí, tự nhiên, kinh tế-xã hội", "C. Điều kiện tự nhiên, dân cư, kinh tế-xã hội", "D. Vị trí địa lí, tự nhiên, dân cư-kinh tế"], correct: 1, explanation: "Theo nguồn gốc, nguồn lực gồm: Vị trí địa lí, tự nhiên và kinh tế-xã hội." }
         ];
 
         let currentQuestions = [];
@@ -578,6 +724,10 @@
         }
 
         async function selectSubject(subjectName) {
+            if (!apiKey || apiKey.toLowerCase().includes('furry')) {
+                openApiKeyModal();
+                return;
+            }
             activeQuizTitle = subjectName;
             document.getElementById('welcome-view').classList.add('hidden');
             document.getElementById('result-container').classList.add('hidden');
@@ -626,8 +776,8 @@
                 container.innerHTML = `
                     <div class="bg-slate-800 rounded-3xl border border-slate-700 p-12 text-center space-y-4">
                         <i class="fa-solid fa-triangle-exclamation text-3xl text-rose-500"></i>
-                        <p class="font-bold text-slate-200 text-base">Lỗi AI: ${err.message}</p>
-                        <button onclick="openApiKeyModal()" class="px-4 py-2 bg-amber-500 text-slate-900 rounded-xl font-bold text-xs">Kiểm tra lại API Key</button>
+                        <p class="font-bold text-slate-200 text-base">Không thể tải đề thi AI lúc này (Kiểm tra lại API Key).</p>
+                        <button onclick="selectSubject('${subjectName}')" class="px-4 py-2 bg-amber-500 text-slate-900 rounded-xl font-bold text-xs">Thử lại</button>
                     </div>
                 `;
             }
@@ -685,6 +835,7 @@
                     <p class="font-bold text-slate-100 text-base leading-relaxed">${q.question}</p>
                     <div class="space-y-2 pt-2">${optionsHtml}</div>
                 `;
+
                 container.appendChild(card);
             });
         }
@@ -736,7 +887,7 @@
                 const feedback = await callGeminiAPI("Bạn là gia sư AI.", prompt);
                 textElem.innerText = feedback;
             } catch (err) {
-                textElem.innerText = `Bạn đã đạt điểm số ${score}/10. Hãy tiếp tục ôn luyện nhé!`;
+                textElem.innerText = `Bạn đã đạt điểm số ${score}/10. Hãy tiếp tục ôn luyện để nâng cao kết quả nhé!`;
             }
         }
 
@@ -767,10 +918,13 @@
                     } else if (userOpt === optIdx && userOpt !== q.correct) {
                         style = 'bg-rose-900/40 border-rose-500 text-rose-300 font-bold';
                         badge = '<span class="ml-2 px-2 py-0.5 bg-rose-600 text-white text-[10px] rounded-lg">Bạn chọn</span>';
+                    } else if (userOpt === optIdx && userOpt === q.correct) {
+                        badge = '<span class="ml-2 px-2 py-0.5 bg-emerald-600 text-white text-[10px] rounded-lg">Bạn chọn đúng</span>';
                     }
                     itemHtml += `<div class="p-2.5 rounded-xl border ${style} text-xs">${opt} ${badge}</div>`;
                 });
-                itemHtml += `<p class="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl mt-2"><strong>Giải thích:</strong> ${q.explanation}</p></div>`;
+                itemHtml += `<p class="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl mt-2"><strong>Giải thích:</strong> ${q.explanation}</p>`;
+                itemHtml += `</div>`;
                 area.innerHTML += itemHtml;
             });
 
@@ -778,13 +932,26 @@
         }
         function closeReviewModal() { document.getElementById('review-modal').classList.add('hidden'); }
 
-        function openAITutorModal() { document.getElementById('ai-tutor-modal').classList.remove('hidden'); }
+        // Mở Modal chức năng
+        function openAITutorModal() {
+            if (!apiKey || apiKey.toLowerCase().includes('furry')) { openApiKeyModal(); return; }
+            document.getElementById('ai-tutor-modal').classList.remove('hidden');
+        }
         function closeAITutorModal() { document.getElementById('ai-tutor-modal').classList.add('hidden'); }
-        function openConceptModal() { document.getElementById('concept-modal').classList.remove('hidden'); }
+        function openConceptModal() {
+            if (!apiKey || apiKey.toLowerCase().includes('furry')) { openApiKeyModal(); return; }
+            document.getElementById('concept-modal').classList.remove('hidden');
+        }
         function closeConceptModal() { document.getElementById('concept-modal').classList.add('hidden'); }
-        function openEssayModal() { document.getElementById('essay-modal').classList.remove('hidden'); }
+        function openEssayModal() {
+            if (!apiKey || apiKey.toLowerCase().includes('furry')) { openApiKeyModal(); return; }
+            document.getElementById('essay-modal').classList.remove('hidden');
+        }
         function closeEssayModal() { document.getElementById('essay-modal').classList.add('hidden'); }
-        function openCustomQuizModal() { document.getElementById('custom-quiz-modal').classList.remove('hidden'); }
+        function openCustomQuizModal() {
+            if (!apiKey || apiKey.toLowerCase().includes('furry')) { openApiKeyModal(); return; }
+            document.getElementById('custom-quiz-modal').classList.remove('hidden');
+        }
         function closeCustomQuizModal() { document.getElementById('custom-quiz-modal').classList.add('hidden'); }
         function handleChatKeyPress(event) { if (event.key === 'Enter') sendChatMessage(); }
 
@@ -827,7 +994,7 @@
                 chatMessages.innerHTML += `
                     <div class="flex items-start gap-3">
                         <div class="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-sm flex-shrink-0"><i class="fa-solid fa-triangle-exclamation text-xs"></i></div>
-                        <div class="bg-slate-700 p-4 rounded-2xl border border-slate-600 shadow-sm max-w-[85%] text-sm text-rose-400">Lỗi: ${err.message}</div>
+                        <div class="bg-slate-700 p-4 rounded-2xl border border-slate-600 shadow-sm max-w-[85%] text-sm text-rose-400">Không thể kết nối với Gia sư AI. Kiểm tra lại API Key.</div>
                     </div>
                 `;
             }
@@ -848,7 +1015,7 @@
                 resultArea.classList.remove('hidden');
             } catch (err) {
                 loading.classList.add('hidden');
-                resultArea.innerText = `Lỗi: ${err.message}`;
+                resultArea.innerText = "Lỗi tra cứu.";
                 resultArea.classList.remove('hidden');
             }
         }
@@ -863,13 +1030,13 @@
             loading.classList.remove('hidden'); resultArea.classList.add('hidden');
 
             try {
-                const grading = await callGeminiAPI("Bạn là giáo viên chấm điểm.", `Đề bài: "${promptText}". Bài làm: "${answerText}". Chấm điểm và nhận xét chi tiết.`);
+                const grading = await callGeminiAPI("Bạn là giáo viên chấm điểm.", `Đề bài: "${promptText}". Bài làm: "${answerText}". Chấm điểm và nhận xét.`);
                 loading.classList.add('hidden');
                 resultArea.innerHTML = `<strong class="text-amber-400">AI Nhận xét:</strong><br><br>${grading.replace(/\n/g, '<br>')}`;
                 resultArea.classList.remove('hidden');
             } catch (err) {
                 loading.classList.add('hidden');
-                resultArea.innerText = `Lỗi: ${err.message}`;
+                resultArea.innerText = "Lỗi chấm bài.";
                 resultArea.classList.remove('hidden');
             }
         }
@@ -917,7 +1084,7 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } catch (err) {
                 loading.classList.add('hidden');
-                alert(`Không thể sinh đề AI: ${err.message}`);
+                alert("Không thể sinh đề AI. Vui lòng kiểm tra lại API Key.");
             }
         }
 
@@ -939,32 +1106,11 @@
                     `;
                 });
             }
+            document.getElementById('history-modal').classList.add('hidden'); // fix
             document.getElementById('history-modal').classList.remove('hidden');
         }
         function closeHistoryModal() { document.getElementById('history-modal').classList.add('hidden'); }
         function clearHistory() { historyList = []; localStorage.removeItem('quiz_history_dark'); updateHistoryBadge(); openHistoryModal(); }
-
-        // Hiệu ứng xoay vòng nút bấm ở trang chủ sau mỗi 10 giây
-        let currentStaticQuizIndex = 0;
-        const staticQuizzes = [
-            { text: "Làm bộ 40 câu Địa lí ngay", action: loadStaticDiaLy },
-            { text: "Làm bộ 60 câu GDCD ngay", action: loadStaticGDCD }
-        ];
-
-        function rotateStaticQuizButton() {
-            const btn = document.getElementById('dynamic-static-quiz-btn');
-            if (btn && document.getElementById('welcome-view').classList.contains('hidden') === false) {
-                btn.classList.add('opacity-0', 'scale-95');
-                setTimeout(() => {
-                    currentStaticQuizIndex = (currentStaticQuizIndex + 1) % staticQuizzes.length;
-                    const nextQuiz = staticQuizzes[currentStaticQuizIndex];
-                    btn.innerHTML = `<i class="fa-solid fa-play"></i> ${nextQuiz.text}`;
-                    btn.onclick = nextQuiz.action;
-                    btn.classList.remove('opacity-0', 'scale-95');
-                }, 300);
-            }
-        }
-        setInterval(rotateStaticQuizButton, 10000);
     </script>
 </body>
 </html>
