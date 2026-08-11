@@ -448,10 +448,16 @@
         </div>
     </div>
 
+    <!-- Credit Badge Amicusz -->
+    <div class="fixed bottom-4 right-4 z-40 bg-slate-800/90 backdrop-blur-md border border-slate-700 text-slate-300 px-3.5 py-2 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+        <span>Created by <span class="text-amber-400 font-bold">Amicusz</span></span>
+    </div>
+
     <script>
         let apiKey = localStorage.getItem('gemini_api_key_dark') || "";
 
-        // Tự động bật bảng thông báo API Key ngay khi load trang nếu chưa có Key
+        // Tự động bật thông báo nhập API Key ngay khi load trang nếu chưa có Key
         window.addEventListener('DOMContentLoaded', () => {
             if (!apiKey) {
                 openApiKeyModal();
@@ -475,13 +481,13 @@
             }
         }
 
-        // API call helper
+        // API call helper dùng model ổn định
         async function callGeminiAPI(systemPrompt, userMessage, responseSchema = null) {
             if (!apiKey) {
                 openApiKeyModal();
                 throw new Error("Vui lòng cấu hình API Key trước khi sử dụng AI.");
             }
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
             const payload = {
                 contents: [{ parts: [{ text: userMessage }] }],
                 systemInstruction: { parts: [{ text: systemPrompt }] }
@@ -494,7 +500,10 @@
             for (let attempt = 0; attempt < 5; attempt++) {
                 try {
                     const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        throw new Error(errData.error?.message || `HTTP error! status: ${response.status}`);
+                    }
                     const result = await response.json();
                     return result.candidates?.[0]?.content?.parts?.[0]?.text;
                 } catch (error) {
@@ -659,7 +668,7 @@
             }
         ];
 
-        // --- BỘ 40 CÂU HỎI ĐỊA LÍ KINH TẾ (Đã sửa lỗi ngoặc kép) ---
+        // --- BỘ 40 CÂU HỎI ĐỊA LÍ KINH TẾ ---
         const diaLyQuestions = [
             { id: 101, type: 'mc', question: "Cơ cấu kinh tế gồm ba bộ phận cơ bản hợp thành, đó là", options: ["A. cơ cấu bộ phận, cơ cấu vùng, cơ cấu thành phần.", "B. cơ cấu ngành, cơ cấu thành phần, cơ cấu lãnh thổ.", "C. cơ cấu bộ phận, cơ cấu ngành, cơ cấu thành phần.", "D. cơ cấu ngành, cơ cấu thành phần, cơ cấu vùng."], correct: 1, explanation: "Cơ cấu kinh tế gồm 3 bộ phận: cơ cấu ngành, cơ cấu thành phần và cơ cấu lãnh thổ." },
             { id: 102, type: 'mc', question: "Ngoài các đồng cỏ tự nhiên, phần lớn thức ăn của ngành chăn nuôi hiện nay là do", options: ["A. công nghiệp chế biến cung cấp", "B. ngành thuỷ sản cung cấp.", "C. ngành lâm nghiệp cung cấp.", "D. ngành trồng trọt cung cấp."], correct: 3, explanation: "Ngành trồng trọt cung cấp phần lớn thức ăn cho chăn nuôi, quyết định sự phát triển của ngành này." },
@@ -673,7 +682,7 @@
             { id: 110, type: 'mc', question: "Dịch vụ nào sau đây không phải tên gọi của 1 trong 3 nhóm ngành dịch vụ chính", options: ["A. Dịch vụ xã hội.", "B. Dịch vụ kinh doanh.", "C. Dịch vụ công.", "D. Dịch vụ tiêu dùng."], correct: 0, explanation: "3 nhóm chính là Dịch vụ tiêu dùng, Dịch vụ kinh doanh và Dịch vụ công cộng (dịch vụ công)." },
             { id: 111, type: 'mc', question: "Tiêu chí nào sau đây không dùng để đánh giá khối lượng dịch vụ của hoạt động vận tải?", options: ["A. Cự ly vận chuyển trung bình.", "B. Khối lượng vận chuyển.", "C. Khối lượng luân chuyển.", "D. Cước phí vận chuyển."], correct: 3, explanation: "Hoạt động vận tải được đánh giá bằng khối lượng vận chuyển, luân chuyển và cự ly vận chuyển trung bình." },
             { id: 112, type: 'mc', question: "Sản xuất trang trại được tiến hành theo cách thức", options: ["A. đa canh.", "B. quảng canh.", "C. đa dạng.", "D. thâm canh."], correct: 3, explanation: "Trang trại thường hướng tới sản xuất hàng hóa quy mô lớn, ứng dụng công nghệ và thâm canh." },
-            { id: 113, type: 'mc', question: "Loại phương tiện vận tải nào phối hợp tốt với tất cả các loại phương tiện vận tải khác?", options: ["A. Đường hàng không.", "B. Đường ô tô.", "C. Đường thủy.", "D. Đường sắt."], correct: 1, explanation: "Đường ô tô có tính cơ động cao nhất, kết nối linh hoạt với các loại hình vận tải khác từ 'door to door'." },
+            { id: 113, type: 'mc', question: "Loại phương tiện vận tải nào phối hợp tốt với tất cả các loại phương tiện vận tải khác?", options: ["A. Đường hàng không.", "B. Đường ô tô.", "C. Đường thủy.", "D. Đường sắt."], correct: 1, explanation: "Đường ô tô có tính cơ động cao nhất, kết nối linh hoạt với các loại hình vận tải khác." },
             { id: 114, type: 'mc', question: "Quốc gia có sản lượng khai thác than lớn nhất thế giới năm 2020 là", options: ["A. In-đô-nê-xi-a.", "B. Trung Quốc.", "C. Ấn Độ.", "D. Liên Bang Nga."], correct: 1, explanation: "Trung Quốc là nước dẫn đầu thế giới về sản lượng khai thác than." },
             { id: 115, type: 'mc', question: "Hiện nay thị trường buôn bán của nước ta được mở rộng", options: ["A. nhưng chưa có quan hệ với các nước Mĩ La tinh.", "B. nhưng chưa có quan hệ với các nước Tây Âu.", "C. theo hướng chú trọng đến các nước xã hội chủ nghĩa.", "D. theo hướng đa phương hóa, đa dạng hóa."], correct: 3, explanation: "Chính sách đối ngoại và kinh tế mở cửa giúp nước ta đa phương hóa, đa dạng hóa thị trường." },
             { id: 116, type: 'mc', question: "Hoạt động ngoại thương được đo bằng", options: ["A. cán cân xuất nhập khẩu.", "B. cán cân nhập khẩu.", "C. cán cân thị trường.", "D. cán cân xuất khẩu."], correct: 0, explanation: "Cán cân xuất nhập khẩu là hiệu số giữa giá trị xuất khẩu và giá trị nhập khẩu, phản ánh tình hình ngoại thương." },
@@ -811,8 +820,8 @@
                 container.innerHTML = `
                     <div class="bg-slate-800 rounded-3xl border border-slate-700 p-12 text-center space-y-4">
                         <i class="fa-solid fa-triangle-exclamation text-3xl text-rose-500"></i>
-                        <p class="font-bold text-slate-200 text-base">Không thể tải đề thi AI lúc này.</p>
-                        <button onclick="selectSubject('${subjectName}')" class="px-4 py-2 bg-amber-500 text-slate-900 rounded-xl font-bold text-xs">Thử lại</button>
+                        <p class="font-bold text-slate-200 text-base">Không thể tải đề thi AI lúc này. Vui lòng kiểm tra lại API Key.</p>
+                        <button onclick="openApiKeyModal()" class="px-4 py-2 bg-amber-500 text-slate-900 rounded-xl font-bold text-xs">Cài đặt API Key</button>
                     </div>
                 `;
             }
@@ -1078,7 +1087,7 @@
                 chatMessages.innerHTML += `
                     <div class="flex items-start gap-3">
                         <div class="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-sm flex-shrink-0"><i class="fa-solid fa-triangle-exclamation text-xs"></i></div>
-                        <div class="bg-slate-700 p-4 rounded-2xl border border-slate-600 shadow-sm max-w-[85%] text-sm text-rose-400">Không thể kết nối với Gia sư AI.</div>
+                        <div class="bg-slate-700 p-4 rounded-2xl border border-slate-600 shadow-sm max-w-[85%] text-sm text-rose-400">Lỗi: ${err.message}. Vui lòng kiểm tra lại API Key.</div>
                     </div>
                 `;
             }
@@ -1099,7 +1108,7 @@
                 resultArea.classList.remove('hidden');
             } catch (err) {
                 loading.classList.add('hidden');
-                resultArea.innerText = "Lỗi tra cứu.";
+                resultArea.innerText = `Lỗi tra cứu: ${err.message}`;
                 resultArea.classList.remove('hidden');
             }
         }
@@ -1120,7 +1129,7 @@
                 resultArea.classList.remove('hidden');
             } catch (err) {
                 loading.classList.add('hidden');
-                resultArea.innerText = "Lỗi chấm bài.";
+                resultArea.innerText = `Lỗi chấm bài: ${err.message}`;
                 resultArea.classList.remove('hidden');
             }
         }
@@ -1168,7 +1177,7 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } catch (err) {
                 loading.classList.add('hidden');
-                alert("Không thể sinh đề AI. Vui lòng thử lại.");
+                alert(`Không thể sinh đề AI: ${err.message}`);
             }
         }
 
@@ -1217,11 +1226,5 @@
         }
         setInterval(rotateStaticQuizButton, 10000);
     </script>
-
-    <!-- Credit Badge Amicusz -->
-    <div class="fixed bottom-4 right-4 z-40 bg-slate-800/90 backdrop-blur-md border border-slate-700 text-slate-300 px-3.5 py-2 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-semibold">
-        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-        <span>Created by <span class="text-amber-400 font-bold">Amicusz</span></span>
-    </div>
 </body>
 </html>
