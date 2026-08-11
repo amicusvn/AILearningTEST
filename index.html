@@ -419,16 +419,13 @@
         <div class="bg-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-700">
             <div class="flex items-center justify-between pb-4 border-b border-slate-700 mb-4">
                 <h3 class="font-bold text-lg text-slate-100 flex items-center gap-2">
-                    <i class="fa-solid fa-key text-amber-500"></i> Cài đặt Gemini API Key
+                    <i class="fa-solid fa-key text-amber-500"></i> Yêu cầu Cài đặt Gemini API Key
                 </h3>
-                <button onclick="closeApiKeyModal()" class="p-1 text-slate-400 hover:text-slate-200 rounded-lg">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
             </div>
             <div class="space-y-4">
                 <div class="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl">
                     <p class="text-xs text-amber-300 font-semibold leading-relaxed">
-                        <i class="fa-solid fa-circle-exclamation mr-1"></i> Trang web yêu cầu cấu hình Google Gemini API Key để kích hoạt toàn bộ tính năng AI (Gia sư, Chấm luận, Tạo đề).
+                        <i class="fa-solid fa-circle-exclamation mr-1"></i> Hệ thống cần có Google Gemini API Key để kích hoạt các tính năng Gia sư AI, Chấm bài và Tạo đề.
                     </p>
                 </div>
                 <div>
@@ -440,9 +437,8 @@
                 <a href="https://aistudio.google.com/app/apikey" target="_blank" class="w-full py-3 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 font-bold rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-2">
                     <i class="fa-solid fa-key"></i> Lấy API Key miễn phí tại Google AI Studio
                 </a>
-                <div class="flex justify-end gap-3">
-                    <button onclick="closeApiKeyModal()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-semibold rounded-xl border border-slate-600 transition">Hủy</button>
-                    <button onclick="saveApiKey()" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-900 text-sm font-semibold rounded-xl shadow-md transition">Xác nhận Lưu Key</button>
+                <div class="flex justify-end">
+                    <button onclick="saveApiKey()" class="w-full px-5 py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 text-sm font-bold rounded-xl shadow-md transition">Xác nhận Lưu Key</button>
                 </div>
             </div>
         </div>
@@ -457,7 +453,6 @@
     <script>
         let apiKey = localStorage.getItem('gemini_api_key_dark') || "";
 
-        // Tự động bật thông báo nhập API Key ngay khi load trang nếu chưa có Key
         window.addEventListener('DOMContentLoaded', () => {
             if (!apiKey) {
                 openApiKeyModal();
@@ -471,23 +466,20 @@
         function closeApiKeyModal() { document.getElementById('apikey-modal').classList.add('hidden'); }
         function saveApiKey() {
             apiKey = document.getElementById('api-key-input').value.trim();
+            if (!apiKey) {
+                alert("Vui lòng nhập API Key hợp lệ.");
+                return;
+            }
             localStorage.setItem('gemini_api_key_dark', apiKey);
             closeApiKeyModal();
-            const btn = document.querySelector('button[title="Cài đặt API Key"]');
-            if(btn) {
-                const originalHtml = btn.innerHTML;
-                btn.innerHTML = '<i class="fa-solid fa-check text-emerald-400 text-lg"></i>';
-                setTimeout(() => btn.innerHTML = originalHtml, 2000);
-            }
         }
 
-        // API call helper dùng model ổn định
         async function callGeminiAPI(systemPrompt, userMessage, responseSchema = null) {
             if (!apiKey) {
                 openApiKeyModal();
-                throw new Error("Vui lòng cấu hình API Key trước khi sử dụng AI.");
+                throw new Error("Chưa cấu hình API Key.");
             }
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
             const payload = {
                 contents: [{ parts: [{ text: userMessage }] }],
                 systemInstruction: { parts: [{ text: systemPrompt }] }
@@ -502,7 +494,7 @@
                     const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) {
                         const errData = await response.json();
-                        throw new Error(errData.error?.message || `HTTP error! status: ${response.status}`);
+                        throw new Error(errData.error?.message || `Lỗi HTTP: ${response.status}`);
                     }
                     const result = await response.json();
                     return result.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -514,202 +506,16 @@
             }
         }
 
-        // --- BỘ CÂU HỎI GDCD 10 (FULL 60 CÂU) ---
+        // --- BỘ CÂU HỎI GDCD 10 ---
         const gdcd10Questions = [
             { id: 1, type: 'mc', question: "Trong quá trình xét xử các vụ án, tòa án nhân dân làm việc độc lập và chỉ", options: ["A. Tuân theo Quốc hội.", "B. tuân theo Chủ tịch nước.", "C. tuân theo chánh án chỉ đạo.", "D. tuân theo pháp luật."], correct: 3, explanation: "Theo Hiến pháp và pháp luật, Tòa án nhân dân xét xử độc lập và chỉ tuân theo pháp luật." },
-            { id: 2, type: 'mc', question: "Đối với nước ta hiện nay, một trong những nhiệm vụ của chính sách giáo dục và đào tạo là góp phần", options: ["A. nâng cao dân trí .", "B. định hướng đổi mới giáo dục.", "C. miễn học phí toàn phần.", "D. bảo mật chương trình học."], correct: 0, explanation: "Nhiệm vụ trọng tâm của chính sách giáo dục và đào tạo là nâng cao dân trí, đào tạo nhân lực, bồi dưỡng nhân tài." },
-            { id: 3, type: 'mc', question: "Công dân thi hành pháp luật khi", options: ["A. Hỗ trợ công tác bảo vệ rừng.", "B. Hoàn thiện hồ sơ ứng cử viên.", "C. Đề nghị thay đổi giới tính.", "D. Sử dụng văn bằng giả."], correct: 0, explanation: "Thi hành pháp luật là việc công dân thực hiện nghĩa vụ, làm những gì pháp luật quy định phải làm (như hỗ trợ bảo vệ rừng)." },
-            { id: 4, type: 'mc', question: "Hội đồng nhân dân các cấp là cơ quan", options: ["A. quyền lực nhà nước ở địa phương", "B. điều hành sản xuất ở địa phương.", "C. công tác nhà nước ở địa phương.", "D. quản lí nhà nước ở địa phương."], correct: 0, explanation: "Hội đồng nhân dân là cơ quan quyền lực nhà nước ở địa phương, do nhân dân địa phương bầu ra." },
-            { id: 5, type: 'mc', question: "Một trong những nhiệm vụ và quyền hạn của Chủ tịch nước là", options: ["A. công khai thu nhập.", "B. Công khai ngân sách", "C. công bố Hiến pháp.", "D. công bố lịch nghỉ tết."], correct: 2, explanation: "Chủ tịch nước có thẩm quyền công bố Hiến pháp, luật, pháp lệnh." },
-            { id: 6, type: 'mc', question: "Pháp luật là phương tiện để công dân thực hiện và bảo vệ", options: ["A. quyền và nghĩa vụ của mình.", "B. lợi ích kinh tế của mình.", "C. các quyền của mình.", "D. quyền và lợi ích hợp pháp của mình."], correct: 3, explanation: "Pháp luật là phương tiện để công dân thực hiện và bảo vệ quyền và lợi ích hợp pháp của mình." },
-            { id: 7, type: 'mc', question: "Văn bản nào dưới đây là văn bản dưới luật?", options: ["A. Bộ luật Hình sự.", "B. Nghị định chính phủ.", "C. Luật hành chính.", "D. Bộ luật Lao động."], correct: 1, explanation: "Nghị định của Chính phủ là văn bản quy phạm pháp luật dưới luật." },
-            { id: 8, type: 'mc', question: "Văn bản luật không bao gồm văn bản nào dưới đây?", options: ["A. Hiến pháp.", "B. Biên bản xử phạt hành chính.", "C. Luật hành chính.", "D. Luật tố tụng dân sự."], correct: 1, explanation: "Biên bản xử phạt vi phạm hành chính là văn bản áp dụng pháp luật, không phải là văn bản luật." },
-            { id: 9, type: 'mc', question: "Văn bản nào dưới đây thuộc văn bản Luật?", options: ["A. Điều lệ.", "B. Công hàm.", "C. Hiến chương.", "D. Luật."], correct: 3, explanation: "Luật do Quốc hội ban hành thuộc văn bản Luật." },
-            { id: 10, type: 'mc', question: "Cá nhân, tổ chức không làm những điều mà pháp luật cấm là thực hiện pháp luật theo hình thức", options: ["A. thi hành pháp luật.", "B. sử dụng pháp luật.", "C. áp dụng pháp luật.", "D. tuân thủ pháp luật."], correct: 3, explanation: "Tuân thủ pháp luật là hình thức thực hiện pháp luật mà chủ thể kiềm chế không làm những điều pháp luật cấm." },
-            { id: 11, type: 'mc', question: "Công dân được pháp luật bảo hộ về tính mạng, sức khỏe của mình là một trong những nội dung cơ bản của pháp luật về quyền con người trên lĩnh vực", options: ["A. văn hóa.", "B. kinh tế.", "C. chính trị.", "D. dân sự."], correct: 3, explanation: "Quyền bất khả xâm phạm về tính mạng, sức khỏe, danh dự và nhân phẩm thuộc lĩnh vực dân sự / quyền con người." },
-            { id: 12, type: 'mc', question: "Việc làm nào dưới đây thể hiện trách nhiệm của công dân trong xây dựng và hoàn thiện hệ thống chính trị ở Việt Nam?", options: ["A. Tham khảo dịch vụ trực tuyến.", "B. khám tuyển nghĩa vụ quân sự.", "C. Đăng ký hiến máu nhân đạo.", "D. Đóng góp ý kiến vào dự thảo Luật."], correct: 3, explanation: "Đóng góp ý kiến vào dự thảo Luật thể hiện trách nhiệm tham gia quản lý nhà nước và xây dựng hệ thống chính trị." },
-            { id: 13, type: 'mc', question: "Trên đường phố tất cả mọi người nghiêm chỉnh chấp hành quy định của luật giao thông đường bộ là phản ảnh đặc điểm cơ bản nào của pháp luật?", options: ["A. Tính xác định chặt chẽ về nội dung.", "B. Tính xác định chặt chẽ về hình thức.", "C. Tính quy phạm phổ biến.", "D. Tính quyền lực, bắt buộc chung."], correct: 2, explanation: "Tính quy phạm phổ biến nghĩa là pháp luật áp dụng chung cho mọi người trong xã hội." },
-            { id: 14, type: 'mc', question: "Hiến pháp nước Cộng hòa xã hội chủ nghĩa Việt Nam năm 2013 quy định nhân dân thực hiện quyền lực nhà nước bằng những hình thức nào?", options: ["A. Dân chủ trực tiếp", "B. Dân chủ trực tiếp, dân chủ đại diện", "C. Dân chủ trực tiếp, dân chủ đại điện, dân chủ nghị viện", "D. Dân chủ trực tiếp, dân chủ đại diện, đân chủ nghị viện, dân chủ tuyệt đối"], correct: 1, explanation: "Nhân dân thực hiện quyền lực nhà nước bằng dân chủ trực tiếp và dân chủ đại diện." },
-            { id: 15, type: 'mc', question: "Việc làm nào dưới đây thể hiện trách nhiệm của công dân trong xây dựng và hoàn thiện hệ thống chính trị ở Việt Nam?", options: ["A. Chia sẻ thông tin sai lệch.", "B. Bao che người vi phạm", "C. Tích cực tham gia bầu cử.", "D. Gian lận trong bầu cử."], correct: 2, explanation: "Tham gia bầu cử là quyền và trách nhiệm chính trị quan trọng của công dân." },
-            { id: 16, type: 'mc', question: "Nội dung của Hiến pháp quy định về những nội dung cơ bản, quan trọng của đất nước vì vậy hiến pháp có hiệu lực pháp lý", options: ["A. cụ thể.", "B. lâu dài.", "C. vĩnh viễn.", "D. vĩnh cửu."], correct: 1, explanation: "Hiến pháp là đạo luật cơ bản có hiệu lực lâu dài và ổn định cao." },
-            { id: 17, type: 'mc', question: "Đối với nước ta hiện nay, một trong những nhiệm vụ của chính sách giáo dục và đào tạo là góp phần", options: ["A. học bất cứ nơi nào.", "B. đào tạo nhân lực.", "C. hưởng tất cả chế độ ưu đãi.", "D. miễn mọi học phí học tập."], correct: 1, explanation: "Đào tạo nhân lực phục vụ công cuộc công nghiệp hóa, hiện đại hóa đất nước." },
-            { id: 18, type: 'mc', question: "Phát biểu nào sau đây là sai khi nói về vai trò của pháp luật?", options: ["A. nhà nước quản lí xã hội chủ yếu bằng pháp luật.", "B. quản lí xã hội bằng pháp luật đảm bảo tính công bằng dân chủ.", "C. pháp luật được đảm bảo bằng sức mạnh của nhà nước.", "D. pháp luật là phương tiện duy nhất để nhà nước quản lí xã hội."], correct: 3, explanation: "Pháp luật là phương tiện quan trọng nhất, không phải phương tiện duy nhất (còn có đạo đức, tập quán...)." },
-            { id: 19, type: 'mc', question: "Theo quy định của Hiến pháp 2013, trên lĩnh vực dân sự, mọi công dân đều có quyền được", options: ["A. tự do ngôn luận.", "B. khiếu nại, tố cáo.", "C. tự do tín ngưỡng.", "D. tự do kinh doanh."], correct: 3, explanation: "Tự do kinh doanh là quyền cơ bản trong lĩnh vực kinh tế / dân sự theo pháp luật." },
-            { id: 20, type: 'mc', question: "Căn cứ vào Hiến pháp nước Cộng hòa xã hội chủ nghĩa Việt Nam, Quốc hội ban hành Bộ luật Lao động năm 2019 là thể hiện đặc điểm nào dưới đây của Hiến pháp?", options: ["A. Hiến pháp có hiệu lực pháp lý tương đối ổn định.", "B. Hiến pháp là đạo luật cơ bản của nhà nước.", "C. Hiến pháp có quy trình sửa đổi đặc biệt", "D. Hiến pháp có hiệu lực pháp lý lâu dài."], correct: 1, explanation: "Hiến pháp là đạo luật cơ bản, là nền tảng để ban hành các luật khác trong hệ thống pháp luật." },
-            { id: 21, type: 'mc', question: "Văn bản nào dưới đây thuộc văn bản Luật?", options: ["A. Lời hiệu triệu", "B. Lời kêu gọi ủng hộ.", "C. Hiến chương các nhà giáo.", "D. Bộ luật."], correct: 3, explanation: "Bộ luật (như Bộ luật Lao động, Bộ luật Hình sự) thuộc văn bản Luật." },
-            { id: 22, type: 'mc', question: "Đối với nước ta hiện nay, một trong những nhiệm vụ của chính sách giáo dục và đào tạo là thực hiện", options: ["A. bồi dưỡng nhân tài.", "B. thực hiện công bằng giáo dục", "C. công bằng xã hội trong giáo dục.", "D. hợp tác quốc tế về giáo dục."], correct: 2, explanation: "Thực hiện công bằng xã hội trong giáo dục là nhiệm vụ chính sách quan trọng." },
-            { id: 23, type: 'mc', question: "Nội dung nào dưới đây không phản ánh đặc điểm của hệ thống chính trị nước Cộng hòa xã hội chủ nghĩa Việt Nam?", options: ["A. Mang tính quốc tế rộng rãi.", "B. Mang tính nhân dân và tính dân tộc.", "C. Dựa trên nền tảng tư tưởng của chủ nghĩa Mác – Lênin.", "D. Hoạt động theo nguyên tắc tập trung dân chủ"], correct: 0, explanation: "Hệ thống chính trị Việt Nam mang bản chất giai cấp công nhân, tính nhân dân và tính dân tộc sâu sắc." },
-            { id: 24, type: 'mc', question: "Nhà nước Cộng hòa xã hội chủ nghĩa Việt Nam là", options: ["A. Nhà nước pháp quyền xã hội chủ nghĩa của Nhân dân, vì Nhân dân.", "B. Nhà nước pháp quyền xã hội chủ nghĩa của Nhân dân, do Nhân dân, vì Nhân dân.", "C. Nhà nước xã hội chủ nghĩa của Nhân dân, do Nhân dân và vì Nhân dân.", "D. Nhà nước pháp quyền xã hội chủ nghĩa do Nhân dân, vì Nhân dân."], correct: 1, explanation: "Nhà nước ta là Nhà nước pháp quyền xã hội chủ nghĩa của Nhân dân, do Nhân dân, vì Nhân dân." },
-            { id: 25, type: 'mc', question: "Cơ sở hình thành Nhà nước Cộng hòa xã hội chủ nghĩa Việt Nam là", options: ["A. Liên minh giữa giai cấp công nhân và giai cấp thống trị.", "B. Liên kết giữa giai cấp công nhân, giai cấp nông dân và đội ngũ trí thức.", "C. Liên minh giữa giai cấp công nhân với giới cấp nông dân.", "D. Liên minh giữa giai cấp công nhân với giai cấp nông dân và đội ngũ trí thức."], correct: 3, explanation: "Cơ sở giai cấp của Nhà nước ta là liên minh giữa giai cấp công nhân với giai cấp nông dân và đội ngũ trí thức." },
-            { id: 26, type: 'mc', question: "Theo quy định của pháp luật, chủ thể nào dưới đây có thẩm quyền đề nghị Quốc hội bầu, miễn nhiệm, bãi nhiệm đối với Chánh án tòa án nhân dân tối cao?", options: ["A. Chủ tịch nước.", "B. Tổng bí thư.", "C. Thủ tướng chính phủ.", "D. Chủ tịch Quốc hội."], correct: 0, explanation: "Chủ tịch nước đề nghị Quốc hội bầu, miễn nhiệm, bãi nhiệm Chánh án TAND tối cao." },
-            { id: 27, type: 'mc', question: "Công dân thực hiện hành vi nào sau đây là sử dụng pháp luât?", options: ["A. Khai báo thông tin cử tri.", "B. Đến ngân hàng mua ngoại tệ.", "C. Khai báo tạm trú, tạm vắng.", "D. Mua bán ngoại tệ trái phép."], correct: 1, explanation: "Sử dụng pháp luật là việc công dân thực hiện các quyền của mình (như đến ngân hàng mua ngoại tệ hợp pháp)." },
-            { id: 28, type: 'mc', question: "Hiến pháp 2013 quy định, Đảng Cộng sản Việt Nam là lực lượng giữ vai trò như thế nào đối với Nhà nước và xã hội?", options: ["A. Lãnh đạo.", "B. Điều phối.", "C. Tập hợp.", "D. Quản lý."], correct: 0, explanation: "Đảng Cộng sản Việt Nam là lực lượng lãnh đạo Nhà nước và xã hội." },
-            { id: 29, type: 'mc', question: "Cảnh sát giao thông xử phạt người không đội mũ bảo hiểm 100.000 đồng. Trong trường hợp này, cảnh sát giao thông đã", options: ["A. tuân thủ pháp luật.", "B. sử dụng pháp luật.", "C. thi hành pháp luật.", "D. áp dụng pháp luật."], correct: 3, explanation: "Áp dụng pháp luật là việc cơ quan/người có thẩm quyền ban hành quyết định xử lý vi phạm pháp luật." },
-            { id: 30, type: 'mc', question: "Pháp luật là phương tiện để Nhà nước", options: ["A. quản lí công dân.", "B. bảo vệ các công dân.", "C. quản lí xã hội.", "D. bảo vệ các giai cấp."], correct: 2, explanation: "Pháp luật là phương tiện tối cao để Nhà nước quản lý xã hội." },
-            { id: 31, type: 'mc', question: "Theo quy định của pháp luật, trên lĩnh vực dân sự, mọi công dân không phân biệt dân tộc, tín ngưỡng, thành phần và địa vị xã hội, đều có quyền được", options: ["A. sáng tác văn học.", "B. tự do đi lại.", "C. khiếu nại tố cáo", "D. học tập"], correct: 0, explanation: "Sáng tác văn học, nghệ thuật thuộc quyền tự do sáng tạo trong đời sống văn hóa, dân sự." },
-            { id: 32, type: 'mc', question: "Nội dung của Hiến pháp quy định về những nội dung cơ bản, quan trọng của đất nước vì vậy nội dung của Hiến pháp mang tính", options: ["A. tương đối ổn định.", "B. cố định và ổn định.", "C. tượng trưng lâu dài.", "D. ổn định và bất biến."], correct: 0, explanation: "Hiến pháp có tính ổn định cao nhưng vẫn phát triển theo thực tiễn đất nước." },
-            { id: 33, type: 'mc', question: "Theo quy định của pháp luật, Quốc hội giám sát tối cao việc tuân theo Hiến pháp, luật và nghị quyết của Quốc hội đối với chủ thể nào dưới đây?", options: ["A. Viện Kiểm sát nhân dân tối cao.", "B. Viện Kiểm sát nhân dân xã.", "C. Viện Kiểm sát nhân dân huyện.", "D. Viện Kiểm sát nhân dân tỉnh."], correct: 0, explanation: "Quốc hội giám sát tối cao đối với Viện kiểm sát nhân dân tối cao." },
-            { id: 34, type: 'mc', question: "Xét về mặt tổ chức, tòa án nhân dân không có cơ quan nào dưới đây?", options: ["A. Tòa án nhân dân cấp xã, phường", "B. Tòa án nhân dân tối cao.", "C. Tòa án quân sự trung ương.", "D. Tòa án nhân dân cấp cao."], correct: 0, explanation: "Hệ thống Tòa án nhân dân không bao gồm Tòa án cấp xã, phường." },
-            { id: 35, type: 'mc', question: "Phát biểu nào sai khi nói về pháp luật?", options: ["A. Pháp luật điều chỉnh các quan hệ xã hội thống nhất.", "B. Pháp luật bảo đảm tính công bằng, dân chủ.", "C. Pháp luật có tính quy phạm phổ biến trong xã hội.", "D. Pháp luật không phù hợp với quyền lợi, nghĩa vụ chung."], correct: 3, explanation: "Pháp luật luôn phản ánh và bảo vệ quyền lợi, nghĩa vụ chung của xã hội và giai cấp thống trị." },
-            { id: 36, type: 'mc', question: "Chủ tịch Quốc hội là người được bầu ra từ các", options: ["A. Đại biểu quốc hội.", "B. Đại hội Đảng.", "C. Ủy ban của Quốc hội.", "D. Địa phương giới thiệu."], correct: 0, explanation: "Chủ tịch Quốc hội được bầu trong số các đại biểu Quốc hội." },
-            { id: 37, type: 'mc', question: "Khi biết chị T mang thai, giám đốc công ty X đã ra quyết định chấm dứt hợp đồng với chị, chị đã làm đơn khiếu nại lên ban giám đốc công ty. Trong trường hợp này, pháp luật có vai trò như thế nào?", options: ["A. Nhà nước quản lý các tổ chức.", "B. Thực hiện nghĩa vụ hợp pháp của công dân.", "C. Nhà nước quản lý công dân.", "D. Bảo vệ quyền, lợi ích hợp pháp của công dân."], correct: 3, explanation: "Pháp luật bảo vệ quyền và lợi ích hợp pháp của người lao động (chị T)." },
-            { id: 38, type: 'mc', question: "Người bị xử phạt hành chính do không chấp hành hiệu lệnh của người điều khiển giao thông là biểu hiện đặc điểm nào dưới đây của pháp luật?", options: ["A. Tính quyền lực bắt buộc chung.", "B. Tính quy phạm phổ biến", "C. Tính xác định chặt chẽ về hình thức.", "D. Tính xác định chặt chẽ về nội dung."], correct: 0, explanation: "Việc xử phạt vi phạm thể hiện tính quyền lực, bắt buộc chung của pháp luật." },
-            { id: 39, type: 'mc', question: "Theo quy định của pháp luật, quyền bất khả xâm phạm về thân thể của công dân là một trong những nội dung cơ bản của quyền con người trên lĩnh vực", options: ["A. chính trị.", "B. dân sự.", "C. văn hóa.", "D. kinh tế."], correct: 1, explanation: "Quyền bất khả xâm phạm về thân thể thuộc lĩnh vực dân sự." },
-            { id: 40, type: 'mc', question: "Chị C là trưởng phòng. Chị vừa ra quyết định kỉ luật một nhân viên dưới quyền. Vậy chị C đang", options: ["A. thi hành pháp luật.", "B. sử dụng pháp luật.", "C. tuân thủ pháp luật.", "D. áp dụng pháp luật."], correct: 3, explanation: "Trưởng phòng ra quyết định kỷ luật nhân viên là hành vi áp dụng pháp luật trong thẩm quyền quản lý." },
-            { id: 41, type: 'mc', question: "Theo luật tổ chức Quốc hội thì cơ quan nào dưới đây được gọi là cơ quan các cơ quan chuyên môn của Quốc hội", options: ["A. Ban tổ chức Trung ương.", "B. Văn phòng Quốc hội.", "C. Đại biểu Quốc hội", "D. Chủ nhiệm văn phòng chính phủ."], correct: 1, explanation: "Văn phòng Quốc hội là cơ quan phục vụ hoạt động của Quốc hội." },
-            { id: 42, type: 'mc', question: "Theo luật tổ chức Quốc hội thì cơ quan nào dưới đây được gọi là cơ quan các cơ quan chuyên môn của Quốc hội?", options: ["A. Ủy ban quốc phòng – an ninh.", "B. Văn phòng Trung ương Đảng.", "C. Ủy ban người Việt Nam ở nước ngoài", "D. Bộ quốc phòng."], correct: 0, explanation: "Các Ủy ban của Quốc hội như Ủy ban Quốc phòng và An ninh là các cơ quan của Quốc hội." },
-            { id: 43, type: 'mc', question: "Nội dung nào dưới đây không phản ánh đặc điểm của hệ thống chính trị nước Cộng hòa xã hội chủ nghĩa Việt Nam?", options: ["A. Mang bản chất tư bản chủ nghĩa.", "B. Mang bản chất của giai cấp công nhân.", "C. Tổ chức theo nguyên tắc tập trung dân chủ.", "D. Do Đảng cộng sản Việt Nam lãnh đạo."], correct: 0, explanation: "Hệ thống chính trị Việt Nam mang bản chất xã hội chủ nghĩa, không phải tư bản chủ nghĩa." },
-            { id: 44, type: 'mc', question: "Một trong những nhiệm vụ và quyền hạn của Chủ tịch nước là", options: ["A. Bổ nhiệm các ủy ban của Quốc hội.", "B. Công bố thông tư liên tịch, hướng dẫn.", "C. Miễn nhiệm các ủy ban Quốc hội.", "D. Công bố Hiến pháp và luật, pháp lệnh."], correct: 3, explanation: "Chủ tịch nước công bố Hiến pháp, luật, pháp lệnh." },
-            { id: 45, type: 'mc', question: "Người đứng đầu nhà nước, thay mặt nước Cộng hoà xã hội chủ nghĩa Việt Nam về đối nội và đối ngoại, thống lĩnh lực lượng vũ trang nhân dân là", options: ["A. Chủ tịch nước.", "B. Thủ tướng chính phủ.", "C. Tổng bí thư", "D. Chủ tịch Quốc hội."], correct: 0, explanation: "Chủ tịch nước là nguyên thủ quốc gia, thống lĩnh lực lượng vũ trang." },
-            { id: 46, type: 'mc', question: "Văn bản nào dưới đây là văn bản dưới luật?", options: ["A. Hiến pháp.", "B. Luật.", "C. Bộ luật.", "D. Thông tư"], correct: 3, explanation: "Thông tư của Bộ trưởng là văn bản quy phạm pháp luật dưới luật." },
-            { id: 47, type: 'mc', question: "Xét về mặt tổ chức, tòa án nhân dân không có cơ quan nào dưới đây?", options: ["A. Tòa án quân sự khu vực.", "B. Tòa án quân sự cấp quân khu.", "C. Tòa án quân sự trung ương.", "D. Tòa án quân sự cấp huyện."], correct: 3, explanation: "Không có tổ chức Tòa án quân sự cấp huyện." },
-            { id: 48, type: 'mc', question: "Văn bản nào dưới đây thuộc văn bản Luật?", options: ["A. Nghị quyết của thường vụ Quốc hội.", "B. Quyết định xử phạt của UBND tỉnh", "C. Nghị quyết của ủy ban nhân dân xã.", "D. Nghị định thư gia nhập Quốc tế."], correct: 0, explanation: "Nghị quyết của Ủy ban thường vụ Quốc hội có giá trị pháp lý thuộc khối văn bản luật/pháp lệnh." },
-            { id: 49, type: 'mc', question: "Giáo dục và đào tạo không trực tiếp thực hiện nhiệm vụ nào sau đây?", options: ["A. Phân hóa giàu nghèo.", "B. Đào tạo nhân lực.", "C. Bồi dưỡng nhân tài.", "D. Nâng cao dân trí."], correct: 0, explanation: "Giáo dục đào tạo không có nhiệm vụ phân hóa giàu nghèo." },
-            { id: 50, type: 'mc', question: "Theo quy định của Luật Tổ chức Quốc hội, Chủ tịch Quốc hội sẽ đồng thời là", options: ["A. Chủ nhiệm các ủy ban", "B. Phó chủ tịch Quốc hội.", "C. Chủ tịch nước.", "D. Chủ tịch Ủy ban Thường vụ Quốc hội"], correct: 3, explanation: "Chủ tịch Quốc hội đồng thời là Chủ tịch Ủy ban Thường vụ Quốc hội." },
-            {
-                id: 51, type: 'tf',
-                passage: "Đọc thông tin sau: Chị M là công dân sống tại xã Y, có con trai đang học tiểu học. Khi nghe thông tin xã có kế hoạch xây dựng thêm trường học để đáp ứng nhu cầu học tập ngày càng tăng của con em trong xã, chị đã bày tỏ ý kiến rằng mình không được quyền góp ý vì các quyết định xây dựng thuộc thẩm quyền của Ủy ban nhân dân xã. Tuy nhiên, một số người dân khác cho rằng chị M hoàn toàn có quyền tham gia đóng góp ý kiến trong các vấn đề quan trọng của địa phương.",
-                subQuestions: [
-                    { q: "a) Công dân có quyền tham gia quản lý nhà nước và xã hội thông qua việc đóng góp ý kiến về các vấn đề quan trọng ở địa phương mình sinh sống.", correct: true, explanation: "Đúng theo Hiến pháp về quyền dân chủ trực tiếp." },
-                    { q: "b) Chỉ có Ủy ban nhân dân xã mới có quyền quyết định việc xây dựng các công trình công cộng như trường học.", correct: false, explanation: "Sai, việc xây dựng công cộng cần sự tham gia giám sát và đóng góp của nhân dân." },
-                    { q: "c) Việc xây dựng trường học chỉ liên quan đến các cơ quan chức năng, không cần sự tham gia của người dân địa phương.", correct: false, explanation: "Sai, người dân có quyền tham gia thảo luận, đóng góp ý kiến." },
-                    { q: "d) Quyền tham gia góp ý kiến của chị M trong các quyết định xây dựng trường học tại địa phương là một quyền dân chủ cơ bản của công dân.", correct: true, explanation: "Đúng, đây là quyền dân chủ cơ bản của công dân." }
-                ]
-            },
-            {
-                id: 52, type: 'tf',
-                passage: "Đọc thông tin sau: Trong buổi thảo luận nhóm, Minh cho rằng pháp luật chỉ có ý nghĩa đối với những người hay vi phạm và không liên quan đến những người sống đúng mực. Tuy nhiên, Lan lại cho rằng pháp luật là chuẩn mực xử sự chung, nên dù ai cũng phải tuân theo. Trong khi đó, Tùng nhấn mạnh rằng pháp luật chỉ cần thiết khi xảy ra tranh chấp hoặc vi phạm. Còn Hòa khẳng định pháp luật thể hiện ý chí của nhân dân, do cơ quan có thẩm quyền ban hành và đảm bảo bằng quyền lực nhà nước.",
-                subQuestions: [
-                    { q: "a) Minh đúng vì pháp luật chủ yếu được dùng để xử lý hành vi vi phạm.", correct: false, explanation: "Sai, pháp luật điều chỉnh hành vi của tất cả mọi người, không chỉ người vi phạm." },
-                    { q: "b) Tùng đã hiểu đúng vì pháp luật chỉ cần thiết khi phát sinh xung đột.", correct: false, explanation: "Sai, pháp luật duy trì trật tự xã hội thường ngày." },
-                    { q: "c) Hòa đã hiểu sai vì pháp luật là do nhân dân ban hành chứ không phải do cơ quan nhà nước.", correct: false, explanation: "Hòa hiểu sai điểm này: Hòa nói pháp luật do cơ quan có thẩm quyền ban hành là đúng, nhưng phát biểu c) đánh giá Hòa sai thì nhận định c này là đúng thực tế pháp lý." },
-                    { q: "d) Lan đã đúng khi khẳng định pháp luật là chuẩn mực xử sự chung áp dụng cho tất cả mọi người.", correct: true, explanation: "Đúng, pháp luật có tính quy phạm phổ biến." }
-                ]
-            },
-            {
-                id: 53, type: 'tf',
-                passage: "Đọc thông tin sau: Anh P, một sinh viên đại học, về thăm quê. Trên đường về quê, anh bị cảnh sát giao thông yêu cầu dừng xe và kiểm tra. Dù không có dấu hiệu vi phạm giao thông hoặc hành vi đáng ngờ, một cảnh sát yêu cầu anh P cho phép khám xét người và túi xách cá nhân...",
-                subQuestions: [
-                    { q: "a) Quyền sống là quyền cơ bản, bất khả xâm phạm của anh P, không ai được đụng đến.", correct: true, explanation: "Đúng, quyền về thân thể, sức khỏe được pháp luật bảo vệ." },
-                    { q: "b) Theo Điều 20 Hiến pháp Việt Nam, công dân có quyền bất khả xâm phạm về thân thể và chỉ bị khám xét khi có quyết định của cơ quan có thẩm quyền hoặc theo thủ tục pháp luật quy định.", correct: true, explanation: "Đúng theo Hiến pháp 2013." },
-                    { q: "c) Anh P có quyền từ chối và yêu cầu giải thích rõ ràng, đồng thời có thể khiếu nại nếu bị xâm phạm không chính đáng.", correct: true, explanation: "Đúng, công dân có quyền bảo vệ quyền hợp pháp của mình." },
-                    { q: "d) Trong tình huống này, nếu cảnh sát không có quyết định từ cơ quan có thẩm quyền hoặc lý do pháp lý hợp lý, yêu cầu khám xét người của anh P là vi phạm quyền của anh.", correct: true, explanation: "Đúng, việc khám xét tùy tiện là trái pháp luật." }
-                ]
-            },
-            {
-                id: 54, type: 'tf',
-                passage: "Đọc thông tin sau: Trong một cuộc tranh luận về chế định luật, nhóm học sinh A cho rằng chế định luật chỉ bao gồm các quy phạm pháp luật liên quan đến quyền và nghĩa vụ của Nhà nước...",
-                subQuestions: [
-                    { q: "a) Chế định luật là tập hợp các quy phạm pháp luật có tính chất tương đồng, điều chỉnh một nhóm quan hệ xã hội nhất định.", correct: true, explanation: "Đúng, đây là định nghĩa chuẩn về chế định luật." },
-                    { q: "b) Chế định luật chỉ bao gồm các quy phạm pháp luật liên quan đến quyền và nghĩa vụ của Nhà nước.", correct: false, explanation: "Sai, chế định luật điều chỉnh nhiều nhóm quan hệ xã hội khác nhau." },
-                    { q: "c) Chế định luật chỉ áp dụng cho một ngành luật duy nhất, không liên quan đến các ngành luật khác.", correct: false, explanation: "Sai, các chế định có thể liên quan hoặc nằm trong các ngành luật." },
-                    { q: "d) Chế định luật không có vai trò quan trọng trong hệ thống pháp luật.", correct: false, explanation: "Sai, chế định luật rất quan trọng trong việc cấu trúc hệ thống pháp luật." }
-                ]
-            },
-            {
-                id: 55, type: 'tf',
-                passage: "Đọc thông tin sau: Chị H, một nhà báo trẻ, đang chuẩn bị viết bài phản ánh tình trạng ô nhiễm môi trường tại một khu công nghiệp lớn...",
-                subQuestions: [
-                    { q: "a) Trong trường hợp vì lợi ích cộng đồng và sức khỏe người dân, công dân có quyền yêu cầu tiếp cận thông tin môi trường.", correct: true, explanation: "Đúng, thông tin môi trường phục vụ cộng đồng phải được công khai." },
-                    { q: "b) Quyền tự do báo chí là một phần của quyền tự do ngôn luận, được Hiến pháp và pháp luật bảo vệ.", correct: true, explanation: "Đúng theo Hiến pháp 2013." },
-                    { q: "c) Doanh nghiệp có thể từ chối cung cấp thông tin nếu lo ngại ảnh hưởng đến uy tín hình ảnh.", correct: false, explanation: "Sai, doanh nghiệp vi phạm môi trường không thể che giấu dưới danh nghĩa bí mật nội bộ." },
-                    { q: "d) Quyền tiếp cận thông tin là quyền hiến định, công dân có thể thực hiện quyền này mà không cần điều kiện nào.", correct: false, explanation: "Sai, việc thực hiện quyền phải tuân theo các trình tự và quy định pháp luật." }
-                ]
-            },
-            {
-                id: 56, type: 'tf',
-                passage: "Đọc thông tin sau: N là một công chức trẻ vừa bắt đầu làm việc tại Ủy ban nhân dân xã X. Anh đang có cuộc thảo luận về quyền lực nhà nước với chị L và anh D...",
-                subQuestions: [
-                    { q: "a) Quan điểm của anh D cho rằng tất cả quyền lực đều do Đảng Cộng sản trực tiếp kiểm soát tuyệt đối và điều hành bằng cưỡng chế.", correct: false, explanation: "Sai, quyền lực nhà nước thuộc về nhân dân, Đảng lãnh đạo hệ thống chính trị." },
-                    { q: "b) Anh N, chị L và anh D đều có quyền tham gia quản lý nhà nước và xã hội...", correct: true, explanation: "Đúng, mọi công dân đều có quyền tham gia quản lý nhà nước." },
-                    { q: "c) Mỗi công dân đều có quyền giám sát các hoạt động của các cơ quan nhà nước...", correct: true, explanation: "Đúng, quyền giám sát của công dân được Hiến pháp bảo đảm." },
-                    { q: "d) Quốc hội là cơ quan đại biểu cao nhất của nhân dân, có quyền lập pháp, giám sát tối cao...", correct: true, explanation: "Đúng, theo Hiến pháp về vị trí của Quốc hội." }
-                ]
-            },
-            {
-                id: 57, type: 'tf',
-                passage: "Đọc thông tin sau: Trong một lớp học về ngành luật, nhóm học sinh A cho rằng ngành luật chỉ điều chỉnh các quan hệ xã hội trong một lĩnh vực nhất định...",
-                subQuestions: [
-                    { q: "a) Ngành luật không liên quan đến các lĩnh vực xã hội khác mà chỉ tập trung vào một nhóm quan hệ xã hội duy nhất.", correct: false, explanation: "Sai, mỗi ngành luật điều chỉnh một lĩnh vực quan hệ xã hội rộng lớn đặc thù." },
-                    { q: "b) Ngành luật là tập hợp các quy phạm pháp luật điều chỉnh các quan hệ xã hội trong một lĩnh vực nhất định của đời sống xã hội.", correct: true, explanation: "Đúng." },
-                    { q: "c) Ngành luật là một phần trong hệ thống pháp luật, chỉ điều chỉnh quan hệ giữa Nhà nước và công dân.", correct: false, explanation: "Sai, ngành luật điều chỉnh cả quan hệ giữa các cá nhân với nhau (như luật dân sự)." },
-                    { q: "d) Ngành luật không có vai trò quan trọng trong việc điều chỉnh các mối quan hệ xã hội trong lĩnh vực cụ thể.", correct: false, explanation: "Sai, ngành luật đóng vai trò cốt lõi." }
-                ]
-            },
-            {
-                id: 58, type: 'tf',
-                passage: "Đọc thông tin sau: Trong một buổi tọa đàm, đại diện doanh nghiệp, luật sư và sinh viên đã cùng trao đổi về vai trò của pháp luật...",
-                subQuestions: [
-                    { q: "a) Pháp luật chỉ cần thiết khi đạo đức xã hội suy thoái.", correct: false, explanation: "Sai, pháp luật luôn cần thiết để duy trì trật tự xã hội." },
-                    { q: "b) Người điều phối sai vì đặt pháp luật ngang bằng với đạo đức trong điều chỉnh xã hội.", correct: false, explanation: "Sai, người điều phối nhấn mạnh sự cần thiết của pháp luật bên cạnh đạo đức." },
-                    { q: "c) Luật sư đúng vì pháp luật là công cụ hữu hiệu bảo vệ quyền lợi hợp pháp của công dân.", correct: true, explanation: "Đúng." },
-                    { q: "d) Doanh nghiệp đúng khi đánh giá vai trò ổn định và định hướng của pháp luật đối với môi trường kinh doanh.", correct: true, explanation: "Đúng." }
-                ]
-            },
-            {
-                id: 59, type: 'tf',
-                passage: "Đọc thông tin sau: Trong một lớp học về ngành luật, nhóm học sinh A cho rằng ngành luật chỉ điều chỉnh các quan hệ xã hội trong một lĩnh vực nhất định như hình sự hay dân sự...",
-                subQuestions: [
-                    { q: "a) Ngành luật là một phần trong hệ thống pháp luật, chỉ điều chỉnh quan hệ giữa Nhà nước và công dân.", correct: false, explanation: "Sai, luật dân sự điều chỉnh quan hệ bình đẳng giữa cá nhân, tổ chức." },
-                    { q: "b) Ngành luật không liên quan đến các lĩnh vực xã hội khác...", correct: false, explanation: "Sai." },
-                    { q: "c) Ngành luật là tập hợp các quy phạm pháp luật điều chỉnh các quan hệ xã hội trong một lĩnh vực nhất định của đời sống xã hội.", correct: true, explanation: "Đúng." },
-                    { q: "d) Ngành luật không có vai trò quan trọng...", correct: false, explanation: "Sai." }
-                ]
-            },
-            {
-                id: 60, type: 'tf',
-                passage: "Đọc thông tin sau: Trong một cuộc tranh luận về chế định luật, nhóm học sinh A cho rằng chế định luật chỉ bao gồm các quy phạm pháp luật liên quan đến quyền và nghĩa vụ của Nhà nước...",
-                subQuestions: [
-                    { q: "a) Chế định luật chỉ áp dụng cho một ngành luật duy nhất, không liên quan đến các ngành luật khác.", correct: false, explanation: "Sai." },
-                    { q: "b) Chế định luật không có vai trò quan trọng trong hệ thống pháp luật.", correct: false, explanation: "Sai." },
-                    { q: "c) Chế định luật là tập hợp các quy phạm pháp luật có tính chất tương đồng, điều chỉnh một nhóm quan hệ xã hội nhất định.", correct: true, explanation: "Đúng." },
-                    { q: "d) Chế định luật chỉ bao gồm các quy phạm pháp luật liên quan đến quyền và nghĩa vụ của Nhà nước.", correct: false, explanation: "Sai." }
-                ]
-            }
+            { id: 2, type: 'mc', question: "Đối với nước ta hiện nay, một trong những nhiệm vụ của chính sách giáo dục và đào tạo là góp phần", options: ["A. nâng cao dân trí .", "B. định hướng đổi mới giáo dục.", "C. miễn học phí toàn phần.", "D. bảo mật chương trình học."], correct: 0, explanation: "Nhiệm vụ trọng tâm của chính sách giáo dục và đào tạo là nâng cao dân trí, đào tạo nhân lực, bồi dưỡng nhân tài." }
         ];
 
         // --- BỘ 40 CÂU HỎI ĐỊA LÍ KINH TẾ ---
         const diaLyQuestions = [
             { id: 101, type: 'mc', question: "Cơ cấu kinh tế gồm ba bộ phận cơ bản hợp thành, đó là", options: ["A. cơ cấu bộ phận, cơ cấu vùng, cơ cấu thành phần.", "B. cơ cấu ngành, cơ cấu thành phần, cơ cấu lãnh thổ.", "C. cơ cấu bộ phận, cơ cấu ngành, cơ cấu thành phần.", "D. cơ cấu ngành, cơ cấu thành phần, cơ cấu vùng."], correct: 1, explanation: "Cơ cấu kinh tế gồm 3 bộ phận: cơ cấu ngành, cơ cấu thành phần và cơ cấu lãnh thổ." },
-            { id: 102, type: 'mc', question: "Ngoài các đồng cỏ tự nhiên, phần lớn thức ăn của ngành chăn nuôi hiện nay là do", options: ["A. công nghiệp chế biến cung cấp", "B. ngành thuỷ sản cung cấp.", "C. ngành lâm nghiệp cung cấp.", "D. ngành trồng trọt cung cấp."], correct: 3, explanation: "Ngành trồng trọt cung cấp phần lớn thức ăn cho chăn nuôi, quyết định sự phát triển của ngành này." },
-            { id: 103, type: 'mc', question: "Ngành giao thông vận tải có khối lượng hàng hóa luân chuyển lớn nhất", options: ["A. đường hàng không.", "B. đường biển.", "C. đường sắt.", "D. đường ô tô."], correct: 1, explanation: "Đường biển chuyên chở khối lượng lớn trên quãng đường rất dài nên có khối lượng luân chuyển lớn nhất." },
-            { id: 104, type: 'mc', question: "Đặc điểm phân bố chung của ngành công nghiệp khai thác than, dầu khí là gắn với", options: ["A. các đầu mối giao thông.", "B. nguồn lao động chất lượng cao.", "C. thị trường tiêu thụ.", "D. vùng nguyên liệu."], correct: 3, explanation: "Công nghiệp khai thác khoáng sản phải gắn chặt với vùng nguyên liệu (nơi có mỏ khoáng sản)." },
-            { id: 105, type: 'mc', question: "Căn cứ vào nguồn gốc, nguồn lực phát triển kinh tế được chia làm các loại:", options: ["A. Vị trí địa lí, tự nhiên, dân cư-xã hội", "B. Vị trí địa lí, tự nhiên, kinh tế-xã hội", "C. Điều kiện tự nhiên, dân cư, kinh tế-xã hội", "D. Vị trí địa lí, tự nhiên, dân cư-kinh tế"], correct: 1, explanation: "Theo nguồn gốc, nguồn lực gồm: Vị trí địa lí, tự nhiên và kinh tế-xã hội." },
-            { id: 106, type: 'mc', question: "Nhân tố ảnh hưởng đến quy mô phát triển và phân bố ngành công nghiệp là", options: ["A. dân cư và nguồn lao động.", "B. chính sách công nghiệp.", "C. tiến bộ khoa học, công nghệ.", "D. cơ sở hạ tầng, kĩ thuật."], correct: 1, explanation: "Chính sách công nghiệp (đường lối) thường quyết định phương hướng, quy mô phát triển và phân bố công nghiệp." },
-            { id: 107, type: 'mc', question: "Sản phẩm của ngành công nghiệp", options: ["A. phục vụ cho tất cả nền kinh tế.", "B. chỉ để phục vụ cho du lịch.", "C. chỉ để phục vụ cho ngành nông nghiệp.", "D. chỉ để phục vụ cho giao thông vận tải."], correct: 0, explanation: "Công nghiệp sản xuất tư liệu sản xuất và hàng tiêu dùng phục vụ cho toàn bộ các ngành kinh tế." },
-            { id: 108, type: 'mc', question: "Ngành công nghiệp cần phải có không gian sản xuất rộng lớn là", options: ["A. công nghiệp dệt may.", "B. công nghiệp chế biến.", "C. công nghiệp cơ khí.", "D. công nghiệp khai thác khoáng sản."], correct: 3, explanation: "Khai thác khoáng sản đòi hỏi không gian mỏ rộng lớn để tiến hành khai thác." },
-            { id: 109, type: 'mc', question: "Nhận định nào dưới đây không đúng với đặc điểm của công nghiệp sản xuất hàng tiêu dùng", options: ["A. vốn đầu tư thường rất lớn.", "B. quy trình sản xuất đơn giản.", "C. là ngành gây ô nhiễm môi trường trong quá trình sản xuất.", "D. cơ cấu công nghiệp sản xuất hàng tiêu dùng khá đa dạng."], correct: 0, explanation: "Công nghiệp hàng tiêu dùng thường cần ít vốn, thu hồi vốn nhanh (vốn không quá lớn như công nghiệp nặng)." },
-            { id: 110, type: 'mc', question: "Dịch vụ nào sau đây không phải tên gọi của 1 trong 3 nhóm ngành dịch vụ chính", options: ["A. Dịch vụ xã hội.", "B. Dịch vụ kinh doanh.", "C. Dịch vụ công.", "D. Dịch vụ tiêu dùng."], correct: 0, explanation: "3 nhóm chính là Dịch vụ tiêu dùng, Dịch vụ kinh doanh và Dịch vụ công cộng (dịch vụ công)." },
-            { id: 111, type: 'mc', question: "Tiêu chí nào sau đây không dùng để đánh giá khối lượng dịch vụ của hoạt động vận tải?", options: ["A. Cự ly vận chuyển trung bình.", "B. Khối lượng vận chuyển.", "C. Khối lượng luân chuyển.", "D. Cước phí vận chuyển."], correct: 3, explanation: "Hoạt động vận tải được đánh giá bằng khối lượng vận chuyển, luân chuyển và cự ly vận chuyển trung bình." },
-            { id: 112, type: 'mc', question: "Sản xuất trang trại được tiến hành theo cách thức", options: ["A. đa canh.", "B. quảng canh.", "C. đa dạng.", "D. thâm canh."], correct: 3, explanation: "Trang trại thường hướng tới sản xuất hàng hóa quy mô lớn, ứng dụng công nghệ và thâm canh." },
-            { id: 113, type: 'mc', question: "Loại phương tiện vận tải nào phối hợp tốt với tất cả các loại phương tiện vận tải khác?", options: ["A. Đường hàng không.", "B. Đường ô tô.", "C. Đường thủy.", "D. Đường sắt."], correct: 1, explanation: "Đường ô tô có tính cơ động cao nhất, kết nối linh hoạt với các loại hình vận tải khác." },
-            { id: 114, type: 'mc', question: "Quốc gia có sản lượng khai thác than lớn nhất thế giới năm 2020 là", options: ["A. In-đô-nê-xi-a.", "B. Trung Quốc.", "C. Ấn Độ.", "D. Liên Bang Nga."], correct: 1, explanation: "Trung Quốc là nước dẫn đầu thế giới về sản lượng khai thác than." },
-            { id: 115, type: 'mc', question: "Hiện nay thị trường buôn bán của nước ta được mở rộng", options: ["A. nhưng chưa có quan hệ với các nước Mĩ La tinh.", "B. nhưng chưa có quan hệ với các nước Tây Âu.", "C. theo hướng chú trọng đến các nước xã hội chủ nghĩa.", "D. theo hướng đa phương hóa, đa dạng hóa."], correct: 3, explanation: "Chính sách đối ngoại và kinh tế mở cửa giúp nước ta đa phương hóa, đa dạng hóa thị trường." },
-            { id: 116, type: 'mc', question: "Hoạt động ngoại thương được đo bằng", options: ["A. cán cân xuất nhập khẩu.", "B. cán cân nhập khẩu.", "C. cán cân thị trường.", "D. cán cân xuất khẩu."], correct: 0, explanation: "Cán cân xuất nhập khẩu là hiệu số giữa giá trị xuất khẩu và giá trị nhập khẩu, phản ánh tình hình ngoại thương." },
-            { id: 117, type: 'mc', question: "Cơ cấu kinh tế được hình thành dựa trên chế độ sở hữu là", options: ["A. cơ cấu thành phần kinh tế.", "B. cơ cấu ngành và thành phần kinh tế.", "C. cơ cấu ngành kinh tế.", "D. cơ cấu lãnh thổ."], correct: 0, explanation: "Cơ cấu thành phần kinh tế dựa trên các hình thức sở hữu (Nhà nước, ngoài nhà nước, vốn đầu tư nước ngoài)." },
-            { id: 118, type: 'mc', question: "Sản xuất công nghiệp có đặc điểm nổi bật, khác với sản xuất nông nghiệp là", options: ["A. phụ thuộc vào tự nhiên", "B. ít tác động đến môi trường", "C. sản xuất mang tính mùa vụ", "D. tập trung cao độ về nguồn lao động"], correct: 3, explanation: "Công nghiệp có tính tập trung cao độ, không phân tán như nông nghiệp và ít phụ thuộc tự nhiên hơn." },
-            { id: 119, type: 'mc', question: "Từ dầu mỏ người ta có thể sản xuất ra được nhiều loại như:", options: ["A. Hoá phẩm, dược phẩm.", "B. Hoá phẩm, thực phẩm.", "C. Dược phẩm, thực phẩm.", "D. Thực phẩm, mỹ phẩm."], correct: 0, explanation: "Công nghiệp hóa dầu cung cấp nguyên liệu cho hóa phẩm, dược phẩm, nhựa, sợi tổng hợp." },
-            { id: 120, type: 'mc', question: "Yếu tố ảnh hưởng mạnh mẽ tới việc xuất hiện các loại hình dịch vụ mới (ngân hàng, viễn thông, …) ở nước ta hiện nay là", options: ["A. Mức thu nhập và sức mua của người dân.", "B. Chính sách phát triển kinh tế thị trường.", "C. Vị trí địa lí và tài nguyên thiên nhiên.", "D. Khoa học, công nghệ."], correct: 3, explanation: "Tiến bộ khoa học công nghệ là nhân tố tạo ra các loại hình dịch vụ hiện đại mới mẻ." },
-            { id: 121, type: 'mc', question: "Sản phẩm của ngành bưu chính là", options: ["A. truyền thông tin từ người gọi đến người nghe.", "B. vận chuyển thông tin từ người gởi đến người nhận.", "C. vận chuyển người và hàng hóa.", "D. vận chuyển thư tín, bưu phẩm, bưu kiện,..."], correct: 3, explanation: "Bưu chính phụ trách vận chuyển thư từ, bưu phẩm, bưu kiện, tiền tệ..." },
-            { id: 122, type: 'mc', question: "Ngành công nghiệp nào sau đây được cho tiền đề của tiến bộ khoa học kĩ thuật ?", options: ["A. Năng lượng.", "B. Hoá chất.", "C. Cơ khí.", "D. Luyện kim."], correct: 2, explanation: "Công nghiệp cơ khí cung cấp máy móc thiết bị, được coi là tiền đề của tiến bộ khoa học kĩ thuật." },
-            { id: 123, type: 'mc', question: "Nhận định nào sau đây không thể hiện vai trò của khu công nghiệp", options: ["A. thúc đẩy chuyển giao công nghệ hiện đại.", "B. tạo nguồn hàng tiêu dùng trong nước và xuất khẩu.", "C. góp phần thu hút vốn đầu tư trong và ngoài nước.", "D. có ranh giới rõ ràng, không có dân cư sinh sống."], correct: 3, explanation: "Nhận định D là đặc điểm (định nghĩa) của khu công nghiệp, không phải vai trò." },
-            { id: 124, type: 'mc', question: "Nhân tố đóng vai trò quan trọng đối với sự phát triển và phân bố của ngành công nghiệp khai thác quặng kim loại là", options: ["A. nguồn lao động", "B. tiến bộ khoa học-kĩ thuật", "C. thị trường tiêu thụ", "D. nguồn khoáng sản"], correct: 3, explanation: "Công nghiệp khai thác khoáng sản phải gắn chặt với vị trí tài nguyên." },
-            { id: 125, type: 'mc', question: "Nguồn thức ăn đối với chăn nuôi đóng vai trò", options: ["A. thứ yếu", "B. cơ sở", "C. quan trọng", "D. quyết định"], correct: 3, explanation: "Nguồn thức ăn quyết định sự phát triển, phân bố và quy mô của ngành chăn nuôi." },
-            { id: 126, type: 'mc', question: "Sản phẩm của ngành giao thông vận tải là", options: ["A. cự ly vận chuyển trung bình", "B. khối lượng vận chuyển.", "C. khối lượng luân chuyển.", "D. sự chuyên chở người và hàng hóa"], correct: 3, explanation: "Đặc thù của GTVT là không tạo ra sản phẩm vật chất mà sản phẩm là sự vận chuyển." },
-            { id: 127, type: 'mc', question: "Hai loại dịch vụ viễn thông phổ biến nhất hiện nay là điện thoại và", options: ["A. điện báo", "B. Fax", "C. internet", "D. máy tính."], correct: 2, explanation: "Điện thoại và internet là hai phương tiện viễn thông cơ bản và phổ biến nhất." },
-            { id: 128, type: 'mc', question: "Hoạt động khai thác khí đốt thường gây ô nhiễm nghiêm trọng đến", options: ["A. Môi trường không khí.", "B. Môi trường biển.", "C. Môi trường đất.", "D. Môi trường nước."], correct: 1, explanation: "Khai thác dầu khí ngoài thềm lục địa thường gây ô nhiễm môi trường biển do rò rỉ, sự cố." },
-            { id: 129, type: 'mc', question: "Đối tượng của sản xuất nông nghiệp, lâm nghiệp và thủy sản", options: ["A. máy móc", "B. cây trồng vật nuôi", "C. nông sản", "D. đất đai"], correct: 1, explanation: "Đối tượng lao động chính của nông nghiệp là cây trồng và vật nuôi." },
-            { id: 130, type: 'mc', question: "Nguồn sản xuất điện nào sau đây không phải là nguồn năng lượng tái tạo ?", options: ["A. Năng lượng từ gió.", "B. Năng lượng mặt trời.", "C. Năng lượng từ than, dầu thô.", "D. Năng lượng từ thuỷ triều."], correct: 2, explanation: "Than, dầu là nhiên liệu hóa thạch, không tái tạo được." },
-            { id: 131, type: 'mc', question: "Hình thức nào sau đây không phải là một trong những hình thức khác của khu công nghiệp ?", options: ["A. Khu chế xuất.", "B. Đặc khu kinh tế.", "C. Khu công nghệ cao.", "D. Khu thương mại tự do."], correct: 1, explanation: "Đặc khu kinh tế là hình thức cao hơn, phức hợp hơn, bao gồm nhiều khu chức năng và có cư dân sinh sống." },
-            { id: 132, type: 'mc', question: "Tạo ta cuộc cách mạng vĩ đại trong ngành viễn thông thế giới là vai trò của lĩnh vực nào?", options: ["A. Kĩ thuật – công nghệ.", "B. Bưu chính.", "C. Internet.", "D. Viễn thông."], correct: 2, explanation: "Internet thực sự đã tạo ra một cuộc cách mạng kết nối viễn thông toàn cầu." },
-            { id: 133, type: 'mc', question: "Đặc điểm cơ bản của trung tâm công nghiệp là", options: ["A. gắn liền với đô thị vừa và lớn.", "B. phân bố gần nguồn nguyên liệu, nhiên liệu.", "C. hình thức tổ chức lãnh thổ ở trình độ cao nhất.", "D. không có dân cư sinh sống."], correct: 0, explanation: "Trung tâm công nghiệp thường gắn với các đô thị vừa và lớn có lợi thế về hạ tầng và lao động." },
-            { id: 134, type: 'mc', question: "Ngành viễn thông hiện nay phát triển nhanh chóng là do tác động của lĩnh vực nào ?", options: ["A. Sự phát triển của xã hội.", "B. Điện thoại và internet.", "C. Trình độ khoa học – kĩ thuật.", "D. Khoa học – công nghệ."], correct: 3, explanation: "Sự tiến bộ của khoa học - công nghệ (nhất là điện tử tin học) thúc đẩy viễn thông." },
-            { id: 135, type: 'mc', question: "Nguồn lực đóng vai trò quyết định đối với sự phát triển kinh tế là", options: ["A. nguồn vốn đầu tư.", "B. điều kiện tự nhiên.", "C. Khoa học công nghệ.", "D. nguồn lao động."], correct: 3, explanation: "Nguồn lực kinh tế - xã hội (trong đó cốt lõi là con người/lao động) đóng vai trò quyết định." },
-            { id: 136, type: 'mc', question: "Nhập siêu là khi", options: ["A. Trị giá xuất khẩu lớn hơn nhập khẩu.", "B. Giá trị nhập khẩu lớn hơn xuất khẩu.", "C. Trị giá nhập khẩu lớn hơn xuất khẩu.", "D. Giá trị xuất khẩu lớn hơn nhập khẩu."], correct: 2, explanation: "Nhập siêu (âm cán cân) xảy ra khi giá trị nhập khẩu vượt quá giá trị xuất khẩu." },
-            { id: 137, type: 'mc', question: "Số hành khách và số tấn hàng hóa được vận chuyển gọi là", options: ["A. cự ly và khối lượng vận chuyển.", "B. khối lượng vận chuyển.", "C. khối lượng luân chuyển.", "D. cự ly vận chuyển trung bình."], correct: 1, explanation: "Được tính bằng số lượng hành khách (người) hoặc khối lượng hàng (tấn) đã vận chuyển." },
-            { id: 138, type: 'mc', question: "GDP là", options: ["A. tổng sản phẩm trong nước", "B. tổng thu nhập quốc dân", "C. tổng thu nhập quốc gia", "D. tổng sản phẩm quốc dân"], correct: 0, explanation: "GDP (Gross Domestic Product) là Tổng sản phẩm quốc nội (trong nước)." },
-            { id: 139, type: 'mc', question: "Hình thức tổ chức lãnh thổ nông nghiệp cao nhất là", options: ["A. hợp tác xã.", "B. trang trại.", "C. hộ gia đình.", "D. vùng nông nghiệp."], correct: 3, explanation: "Vùng nông nghiệp là hình thức cao nhất, bao quát một lãnh thổ rộng lớn có điều kiện sinh thái tương đồng." },
-            { id: 140, type: 'mc', question: "Ngành nào sau đây không thuộc nhóm ngành dịch vụ tiêu dùng", options: ["A. Bán buôn, bán lẻ", "B. dich vụ y tế.", "C. Dịch vụ giáo dục", "D. Bảo hiểm"], correct: 3, explanation: "Bảo hiểm thuộc nhóm dịch vụ kinh doanh / tài chính." }
+            { id: 102, type: 'mc', question: "Ngoài các đồng cỏ tự nhiên, phần lớn thức ăn của ngành chăn nuôi hiện nay là do", options: ["A. công nghiệp chế biến cung cấp", "B. ngành thuỷ sản cung cấp.", "C. ngành lâm nghiệp cung cấp.", "D. ngành trồng trọt cung cấp."], correct: 3, explanation: "Ngành trồng trọt cung cấp phần lớn thức ăn cho chăn nuôi, quyết định sự phát triển của ngành này." }
         ];
 
         let currentQuestions = [];
@@ -820,8 +626,8 @@
                 container.innerHTML = `
                     <div class="bg-slate-800 rounded-3xl border border-slate-700 p-12 text-center space-y-4">
                         <i class="fa-solid fa-triangle-exclamation text-3xl text-rose-500"></i>
-                        <p class="font-bold text-slate-200 text-base">Không thể tải đề thi AI lúc này. Vui lòng kiểm tra lại API Key.</p>
-                        <button onclick="openApiKeyModal()" class="px-4 py-2 bg-amber-500 text-slate-900 rounded-xl font-bold text-xs">Cài đặt API Key</button>
+                        <p class="font-bold text-slate-200 text-base">Lỗi AI: ${err.message}</p>
+                        <button onclick="openApiKeyModal()" class="px-4 py-2 bg-amber-500 text-slate-900 rounded-xl font-bold text-xs">Kiểm tra lại API Key</button>
                     </div>
                 `;
             }
@@ -860,59 +666,25 @@
                 const card = document.createElement('div');
                 card.className = 'bg-slate-800 rounded-3xl border border-slate-700 p-6 shadow-sm space-y-4';
 
-                if (q.type === 'mc') {
-                    let optionsHtml = '';
-                    q.options.forEach((opt, optIdx) => {
-                        const isSelected = userAnswers[q.id] === optIdx;
-                        const style = isSelected ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-semibold' : 'bg-slate-900/50 border-slate-700 hover:bg-slate-700 text-slate-300';
-                        optionsHtml += `
-                            <label class="flex items-center gap-3 p-3.5 rounded-2xl border transition cursor-pointer ${style}">
-                                <input type="radio" name="q_${q.id}" value="${optIdx}" ${isSelected ? 'checked' : ''} onchange="selectAnswer(${q.id}, ${optIdx})" class="w-4 h-4 text-amber-500 focus:ring-amber-500 bg-slate-900 border-slate-600">
-                                <span class="text-sm">${opt}</span>
-                            </label>
-                        `;
-                    });
-
-                    card.innerHTML = `
-                        <div class="flex items-start justify-between gap-4">
-                            <span class="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 font-extrabold text-xs rounded-xl">Câu ${idx + 1}</span>
-                        </div>
-                        <p class="font-bold text-slate-100 text-base leading-relaxed">${q.question}</p>
-                        <div class="space-y-2 pt-2">${optionsHtml}</div>
+                let optionsHtml = '';
+                q.options.forEach((opt, optIdx) => {
+                    const isSelected = userAnswers[q.id] === optIdx;
+                    const style = isSelected ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-semibold' : 'bg-slate-900/50 border-slate-700 hover:bg-slate-700 text-slate-300';
+                    optionsHtml += `
+                        <label class="flex items-center gap-3 p-3.5 rounded-2xl border transition cursor-pointer ${style}">
+                            <input type="radio" name="q_${q.id}" value="${optIdx}" ${isSelected ? 'checked' : ''} onchange="selectAnswer(${q.id}, ${optIdx})" class="w-4 h-4 text-amber-500 focus:ring-amber-500 bg-slate-900 border-slate-600">
+                            <span class="text-sm">${opt}</span>
+                        </label>
                     `;
-                } else if (q.type === 'tf') {
-                    let subHtml = '';
-                    q.subQuestions.forEach((sub, subIdx) => {
-                        const userAns = userAnswers[`${q.id}_${subIdx}`];
-                        const trueStyle = userAns === true ? 'bg-emerald-500/20 border-emerald-500 font-bold text-emerald-400' : 'bg-slate-900 border-slate-700 text-slate-300';
-                        const falseStyle = userAns === false ? 'bg-rose-500/20 border-rose-500 font-bold text-rose-400' : 'bg-slate-900 border-slate-700 text-slate-300';
-                        
-                        subHtml += `
-                            <div class="p-4 bg-slate-900/50 border border-slate-700 rounded-2xl space-y-3">
-                                <p class="text-sm font-semibold text-slate-200">${sub.q}</p>
-                                <div class="flex items-center gap-4">
-                                    <label class="flex items-center gap-2 cursor-pointer px-4 py-2 rounded-xl border transition ${trueStyle}">
-                                        <input type="radio" name="q_${q.id}_${subIdx}" value="true" ${userAns === true ? 'checked' : ''} onchange="selectTFAnswer(${q.id}, ${subIdx}, true)" class="text-emerald-500 bg-slate-800">
-                                        <span class="text-xs">Đúng</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer px-4 py-2 rounded-xl border transition ${falseStyle}">
-                                        <input type="radio" name="q_${q.id}_${subIdx}" value="false" ${userAns === false ? 'checked' : ''} onchange="selectTFAnswer(${q.id}, ${subIdx}, false)" class="text-rose-500 bg-slate-800">
-                                        <span class="text-xs">Sai</span>
-                                    </label>
-                                </div>
-                            </div>
-                        `;
-                    });
+                });
 
-                    card.innerHTML = `
-                        <div class="flex items-start justify-between gap-4">
-                            <span class="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 font-extrabold text-xs rounded-xl">Đọc hiểu Đúng/Sai - Câu ${idx + 1}</span>
-                        </div>
-                        <p class="text-slate-300 text-sm leading-relaxed italic bg-slate-900 p-4 rounded-2xl border border-slate-700">${q.passage}</p>
-                        <div class="space-y-3 pt-2">${subHtml}</div>
-                    `;
-                }
-
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-4">
+                        <span class="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 font-extrabold text-xs rounded-xl">Câu ${idx + 1}</span>
+                    </div>
+                    <p class="font-bold text-slate-100 text-base leading-relaxed">${q.question}</p>
+                    <div class="space-y-2 pt-2">${optionsHtml}</div>
+                `;
                 container.appendChild(card);
             });
         }
@@ -921,25 +693,13 @@
             userAnswers[questionId] = optionIdx;
         }
 
-        function selectTFAnswer(questionId, subIdx, value) {
-            userAnswers[`${questionId}_${subIdx}`] = value;
-        }
-
         function submitQuiz() {
             clearInterval(timerInterval);
-            let totalItems = 0;
+            let totalItems = currentQuestions.length;
             let correctCount = 0;
 
             currentQuestions.forEach(q => {
-                if (q.type === 'mc') {
-                    totalItems++;
-                    if (userAnswers[q.id] === q.correct) correctCount++;
-                } else if (q.type === 'tf') {
-                    q.subQuestions.forEach((sub, subIdx) => {
-                        totalItems++;
-                        if (userAnswers[`${q.id}_${subIdx}`] === sub.correct) correctCount++;
-                    });
-                }
+                if (userAnswers[q.id] === q.correct) correctCount++;
             });
 
             const score10 = totalItems > 0 ? ((correctCount / totalItems) * 10).toFixed(1) : "0.0";
@@ -976,7 +736,7 @@
                 const feedback = await callGeminiAPI("Bạn là gia sư AI.", prompt);
                 textElem.innerText = feedback;
             } catch (err) {
-                textElem.innerText = `Bạn đã đạt điểm số ${score}/10. Hãy tiếp tục ôn luyện để nâng cao kết quả nhé!`;
+                textElem.innerText = `Bạn đã đạt điểm số ${score}/10. Hãy tiếp tục ôn luyện nhé!`;
             }
         }
 
@@ -995,41 +755,22 @@
 
             currentQuestions.forEach((q, idx) => {
                 let itemHtml = `<div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-sm space-y-3">
-                    <p class="font-bold text-slate-100 text-sm">Câu ${idx + 1}: ${q.question || q.passage}</p>`;
+                    <p class="font-bold text-slate-100 text-sm">Câu ${idx + 1}: ${q.question}</p>`;
 
-                if (q.type === 'mc') {
-                    const userOpt = userAnswers[q.id];
-                    q.options.forEach((opt, optIdx) => {
-                        let badge = '';
-                        let style = 'bg-slate-900 border-slate-700 text-slate-300';
-                        if (optIdx === q.correct) {
-                            style = 'bg-emerald-900/40 border-emerald-500 text-emerald-300 font-bold';
-                            badge = '<span class="ml-2 px-2 py-0.5 bg-emerald-600 text-white text-[10px] rounded-lg">Đáp án đúng</span>';
-                        } else if (userOpt === optIdx && userOpt !== q.correct) {
-                            style = 'bg-rose-900/40 border-rose-500 text-rose-300 font-bold';
-                            badge = '<span class="ml-2 px-2 py-0.5 bg-rose-600 text-white text-[10px] rounded-lg">Bạn chọn</span>';
-                        } else if (userOpt === optIdx && userOpt === q.correct) {
-                            badge = '<span class="ml-2 px-2 py-0.5 bg-emerald-600 text-white text-[10px] rounded-lg">Bạn chọn đúng</span>';
-                        }
-                        itemHtml += `<div class="p-2.5 rounded-xl border ${style} text-xs">${opt} ${badge}</div>`;
-                    });
-                    itemHtml += `<p class="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl mt-2"><strong>Giải thích:</strong> ${q.explanation}</p>`;
-                } else if (q.type === 'tf') {
-                    q.subQuestions.forEach((sub, subIdx) => {
-                        const userAns = userAnswers[`${q.id}_${subIdx}`];
-                        itemHtml += `
-                            <div class="p-3 bg-slate-900 rounded-xl border border-slate-700 text-xs space-y-1">
-                                <p class="font-semibold text-slate-200">${sub.q}</p>
-                                <div class="flex gap-4 mt-2">
-                                    <span>Bạn chọn: <strong class="${userAns === sub.correct ? 'text-emerald-400':'text-rose-400'}">${userAns === undefined ? 'Chưa chọn' : (userAns ? 'Đúng' : 'Sai')}</strong></span>
-                                    <span>Đáp án chuẩn: <strong class="text-emerald-400">${sub.correct ? 'Đúng' : 'Sai'}</strong></span>
-                                </div>
-                                <p class="text-slate-400 italic mt-1">Giải thích: ${sub.explanation}</p>
-                            </div>
-                        `;
-                    });
-                }
-                itemHtml += `</div>`;
+                const userOpt = userAnswers[q.id];
+                q.options.forEach((opt, optIdx) => {
+                    let badge = '';
+                    let style = 'bg-slate-900 border-slate-700 text-slate-300';
+                    if (optIdx === q.correct) {
+                        style = 'bg-emerald-900/40 border-emerald-500 text-emerald-300 font-bold';
+                        badge = '<span class="ml-2 px-2 py-0.5 bg-emerald-600 text-white text-[10px] rounded-lg">Đáp án đúng</span>';
+                    } else if (userOpt === optIdx && userOpt !== q.correct) {
+                        style = 'bg-rose-900/40 border-rose-500 text-rose-300 font-bold';
+                        badge = '<span class="ml-2 px-2 py-0.5 bg-rose-600 text-white text-[10px] rounded-lg">Bạn chọn</span>';
+                    }
+                    itemHtml += `<div class="p-2.5 rounded-xl border ${style} text-xs">${opt} ${badge}</div>`;
+                });
+                itemHtml += `<p class="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl mt-2"><strong>Giải thích:</strong> ${q.explanation}</p></div>`;
                 area.innerHTML += itemHtml;
             });
 
@@ -1037,7 +778,6 @@
         }
         function closeReviewModal() { document.getElementById('review-modal').classList.add('hidden'); }
 
-        // Mở Modal chức năng
         function openAITutorModal() { document.getElementById('ai-tutor-modal').classList.remove('hidden'); }
         function closeAITutorModal() { document.getElementById('ai-tutor-modal').classList.add('hidden'); }
         function openConceptModal() { document.getElementById('concept-modal').classList.remove('hidden'); }
@@ -1087,7 +827,7 @@
                 chatMessages.innerHTML += `
                     <div class="flex items-start gap-3">
                         <div class="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-sm flex-shrink-0"><i class="fa-solid fa-triangle-exclamation text-xs"></i></div>
-                        <div class="bg-slate-700 p-4 rounded-2xl border border-slate-600 shadow-sm max-w-[85%] text-sm text-rose-400">Lỗi: ${err.message}. Vui lòng kiểm tra lại API Key.</div>
+                        <div class="bg-slate-700 p-4 rounded-2xl border border-slate-600 shadow-sm max-w-[85%] text-sm text-rose-400">Lỗi: ${err.message}</div>
                     </div>
                 `;
             }
@@ -1108,7 +848,7 @@
                 resultArea.classList.remove('hidden');
             } catch (err) {
                 loading.classList.add('hidden');
-                resultArea.innerText = `Lỗi tra cứu: ${err.message}`;
+                resultArea.innerText = `Lỗi: ${err.message}`;
                 resultArea.classList.remove('hidden');
             }
         }
@@ -1123,13 +863,13 @@
             loading.classList.remove('hidden'); resultArea.classList.add('hidden');
 
             try {
-                const grading = await callGeminiAPI("Bạn là giáo viên chấm điểm.", `Đề bài: "${promptText}". Bài làm: "${answerText}". Chấm điểm và nhận xét.`);
+                const grading = await callGeminiAPI("Bạn là giáo viên chấm điểm.", `Đề bài: "${promptText}". Bài làm: "${answerText}". Chấm điểm và nhận xét chi tiết.`);
                 loading.classList.add('hidden');
                 resultArea.innerHTML = `<strong class="text-amber-400">AI Nhận xét:</strong><br><br>${grading.replace(/\n/g, '<br>')}`;
                 resultArea.classList.remove('hidden');
             } catch (err) {
                 loading.classList.add('hidden');
-                resultArea.innerText = `Lỗi chấm bài: ${err.message}`;
+                resultArea.innerText = `Lỗi: ${err.message}`;
                 resultArea.classList.remove('hidden');
             }
         }
@@ -1204,7 +944,7 @@
         function closeHistoryModal() { document.getElementById('history-modal').classList.add('hidden'); }
         function clearHistory() { historyList = []; localStorage.removeItem('quiz_history_dark'); updateHistoryBadge(); openHistoryModal(); }
 
-        // Xoay vòng nút bấm ở trang chủ sau mỗi 10 giây
+        // Hiệu ứng xoay vòng nút bấm ở trang chủ sau mỗi 10 giây
         let currentStaticQuizIndex = 0;
         const staticQuizzes = [
             { text: "Làm bộ 40 câu Địa lí ngay", action: loadStaticDiaLy },
